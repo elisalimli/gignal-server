@@ -28,6 +28,10 @@ __decorate([
     __metadata("design:type", String)
 ], Team.prototype, "name", void 0);
 __decorate([
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.teams),
+    __metadata("design:type", User_1.User)
+], Team.prototype, "creator", void 0);
+__decorate([
     type_graphql_1.Field(),
     typeorm_1.Column(),
     __metadata("design:type", Number)
@@ -38,7 +42,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Team.prototype, "channels", void 0);
 __decorate([
-    type_graphql_1.Field(() => [User_1.User]),
+    type_graphql_1.Field(() => [Member_1.Member]),
     typeorm_1.OneToMany(() => Member_1.Member, (member) => member.team, { cascade: true }),
     __metadata("design:type", Array)
 ], Team.prototype, "members", void 0);

@@ -41,12 +41,16 @@ export class Message extends BaseEntity {
   channel!: Channel;
 
   @Field(() => String)
-  @CreateDateColumn()
-  createdAt: Date;
+  @Column()
+  createdAt: String;
 
   @Field(() => String)
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // @Field(() => String)
+  // @Column()
+  // createdAt: string;
 
   //   @Field()
   //   @ManyToOne(() => User, (user) => user.posts)

@@ -8,7 +8,8 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { Team } from "./Team";
-// import { User } from "./User";
+import { User } from "./User";
+// import { User } from './User';
 
 @ObjectType()
 @Entity()
@@ -30,6 +31,15 @@ export class Member extends BaseEntity {
     onDelete: "CASCADE",
   })
   team!: Team;
+
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.members, {
+    onDelete: "CASCADE",
+  })
+  user!: User;
+
+  @Field(() => Boolean)
+  isYou: boolean;
 
   @Field(() => Boolean)
   @Column({ type: "boolean", default: false })

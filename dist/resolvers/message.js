@@ -26,9 +26,10 @@ const graphql_subscriptions_1 = require("graphql-subscriptions");
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Message_1 = require("../entities/Message");
+const User_1 = require("../entities/User");
 const isAuth_1 = require("../middlewares/isAuth");
 const CreateMessageInput_1 = require("../types/Input/CreateMessageInput");
-const User_1 = require("../entities/User");
+const permissions_1 = require("../permissions");
 const NEW_CHANNEL_MESSAGE = "NEW_CHANNEL_MESSAGE";
 const pubsub = new graphql_subscriptions_1.PubSub();
 let MessageResolver = class MessageResolver {
@@ -51,6 +52,7 @@ let MessageResolver = class MessageResolver {
                 text,
                 channelId,
                 creatorId: req.session.userId,
+                createdAt: new Date().toISOString(),
             }).save();
             const asyncFo = () => __awaiter(this, void 0, void 0, function* () {
                 const currentUser = yield User_1.User.findOne(message.creatorId);
@@ -64,7 +66,6 @@ let MessageResolver = class MessageResolver {
         });
     }
     newMessageAdded(root, channelId) {
-        console.log("sub", root);
         return root.newMessageAdded;
     }
 };
@@ -87,15 +88,15 @@ __decorate([
 ], MessageResolver.prototype, "createMessage", null);
 __decorate([
     type_graphql_1.Subscription(() => Message_1.Message, {
-        subscribe: graphql_subscriptions_1.withFilter((_, __, { connection }) => {
-            var _a, _b, _c, _d, _e;
-            console.log("!connection.context?.req?.session", !((_b = (_a = connection.context) === null || _a === void 0 ? void 0 : _a.req) === null || _b === void 0 ? void 0 : _b.session));
-            if (!((_e = (_d = (_c = connection.context) === null || _c === void 0 ? void 0 : _c.req) === null || _d === void 0 ? void 0 : _d.session) === null || _e === void 0 ? void 0 : _e.userId))
+        subscribe: permissions_1.requiresTeamAccess.createResolver(graphql_subscriptions_1.withFilter((_, args, { connection }) => {
+            var _a, _b, _c;
+            const userId = (_c = (_b = (_a = connection.context) === null || _a === void 0 ? void 0 : _a.req) === null || _b === void 0 ? void 0 : _b.session) === null || _c === void 0 ? void 0 : _c.userId;
+            if (!userId)
                 throw new Error("not auth");
             return pubsub.asyncIterator(NEW_CHANNEL_MESSAGE);
-        }, (payload, variables, _) => {
+        }, (payload, variables) => __awaiter(void 0, void 0, void 0, function* () {
             return variables.channelId === payload.channelId;
-        }),
+        }))),
     }),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Arg("channelId", () => type_graphql_1.Int)),

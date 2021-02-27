@@ -3,7 +3,6 @@ import { PubSub, withFilter } from "graphql-subscriptions";
 import {
   Arg,
   Ctx,
-  FieldResolver,
   Int,
   Mutation,
   Query,
@@ -13,11 +12,14 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
+import { Channel } from "../entities/Channel";
+import { Member } from "../entities/Member";
 import { Message } from "../entities/Message";
+import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
 import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
-import { User } from "../entities/User";
+import { requiresTeamAccess } from "../permissions";
 
 const NEW_CHANNEL_MESSAGE = "NEW_CHANNEL_MESSAGE";
 const pubsub = new PubSub();
@@ -53,8 +55,9 @@ export class MessageResolver {
       text,
       channelId,
       creatorId: req.session.userId,
+      createdAt: new Date().toISOString(),
     }).save();
-
+    //ads
     const asyncFo = async () => {
       const currentUser = await User.findOne(message.creatorId);
       pubsub.publish(NEW_CHANNEL_MESSAGE, {
@@ -69,21 +72,36 @@ export class MessageResolver {
     return message;
   }
 
+  // async subscribe(rootValue,sad args, context) {
+  //   const userId = await getUserId(subscribeContext);
+  //   return withFilter(() => context.pubsub.asyncIterator('group'), filter)(rootValue, args, context);
+  // },
   @Subscription(() => Message, {
-    subscribe: withFilter(
-      (_, __, { connection }) => {
-        console.log(
-          "!connection.context?.req?.session",
-          !connection.context?.req?.session
-        );
-        if (!connection.context?.req?.session?.userId)
-          throw new Error("not auth");
+    subscribe: requiresTeamAccess.createResolver(
+      withFilter(
+        (_, args: any, { connection }: any) => {
+          const userId = connection.context?.req?.session?.userId;
+          // checking user is logged in
+          if (!userId) throw new Error("not auth");
+          return pubsub.asyncIterator(NEW_CHANNEL_MESSAGE);
 
-        return pubsub.asyncIterator(NEW_CHANNEL_MESSAGE);
-      },
-      (payload: Message, variables: { channelId: number }, _) => {
-        return variables.channelId === payload.channelId;
-      }
+          // check user if part of the team
+          // return Channel.findOne(args.channelId).then((res) => {
+          //   Member.findOne({ where: { userId, teamId: res?.teamId } }).then(
+          //     (member) => {
+          //       // if (!member)
+          //       // throw new Error(
+          //       //   "You aren't part of the team,so you can't subscribe to its messages"
+          //       // );
+
+          //     }
+          //   );
+          // });
+        },
+        async (payload: Message, variables: { channelId: number }) => {
+          return variables.channelId === payload.channelId;
+        }
+      )
     ),
   })
   newMessageAdded(
@@ -91,7 +109,6 @@ export class MessageResolver {
     // eslint-disable-next-line no-unused-vars
     @Arg("channelId", () => Int) channelId: number
   ) {
-    console.log("sub", root);
     return root.newMessageAdded;
   }
 }

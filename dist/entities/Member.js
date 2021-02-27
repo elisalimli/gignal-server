@@ -13,6 +13,7 @@ exports.Member = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Team_1 = require("./Team");
+const User_1 = require("./User");
 let Member = class Member extends typeorm_1.BaseEntity {
 };
 __decorate([
@@ -37,6 +38,17 @@ __decorate([
     }),
     __metadata("design:type", Team_1.Team)
 ], Member.prototype, "team", void 0);
+__decorate([
+    type_graphql_1.Field(() => User_1.User),
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.members, {
+        onDelete: "CASCADE",
+    }),
+    __metadata("design:type", User_1.User)
+], Member.prototype, "user", void 0);
+__decorate([
+    type_graphql_1.Field(() => Boolean),
+    __metadata("design:type", Boolean)
+], Member.prototype, "isYou", void 0);
 __decorate([
     type_graphql_1.Field(() => Boolean),
     typeorm_1.Column({ type: "boolean", default: false }),

@@ -17,6 +17,7 @@ import { isAuth } from "../middlewares/isAuth";
 import { FieldError } from "../types/Error/FieldError";
 import { MyContext } from "../types/MyContext";
 import { CreateTeamResponse } from "../types/Response/CreateTeamResponse";
+import { Member } from "../entities/Member";
 
 @Resolver(Team)
 export class TeamResolver {
@@ -39,7 +40,8 @@ export class TeamResolver {
   async invitedTeams(@Ctx() { req }: MyContext): Promise<Team[] | null> {
     return getConnection().query(
       `
-      select t.id,t.name from member m join team t on t.id = m."teamId" where m."userId" = $1
+      select t.id,t.name from member m join team t on t.id = m."teamId" 
+      where m."userId" = $1 and t."creatorId" != $1
       `,
       [req.session.userId]
     );
@@ -90,22 +92,23 @@ export class TeamResolver {
        array_agg(json_build_object('id',c.id,'name',c.name,'teamId',c."teamId")) channels
        from team t 
        left join channel c on c."teamId" = $1 where t.id = $1
-
        group by t.id
+       limit 1
+
       `,
         [teamId]
       )
     )[0];
-    console.log("here res buddy", res);
     return res;
   }
 
-  @FieldResolver(() => [User], { nullable: true })
+  @FieldResolver(() => [Member], { nullable: true })
   async members(@Root() root: Team) {
     return getConnection().query(
       `
-    select * from member m  join public.user u on u.id = m."userId" where m."teamId" = $1
-    `,
+select m.*,json_build_object('id',u.id,'username',u.username) as user  from member m join public.user 
+u on u.id = m."userId" where m."teamId" = $1
+`,
       [root.id]
     );
   }
@@ -174,6 +177,13 @@ export class TeamResolver {
           name: "general",
           teamId: newTeam.id,
         }).save();
+
+        Member.create({
+          admin: true,
+          teamId: newTeam.id,
+          userId,
+        }).save();
+
         return {
           team: newTeam,
           channelId: id,

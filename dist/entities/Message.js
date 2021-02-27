@@ -50,8 +50,8 @@ __decorate([
 ], Message.prototype, "channel", void 0);
 __decorate([
     type_graphql_1.Field(() => String),
-    typeorm_1.CreateDateColumn(),
-    __metadata("design:type", Date)
+    typeorm_1.Column(),
+    __metadata("design:type", String)
 ], Message.prototype, "createdAt", void 0);
 __decorate([
     type_graphql_1.Field(() => String),

@@ -26,9 +26,9 @@ const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Channel_1 = require("../entities/Channel");
 const Team_1 = require("../entities/Team");
-const User_1 = require("../entities/User");
 const isAuth_1 = require("../middlewares/isAuth");
 const CreateTeamResponse_1 = require("../types/Response/CreateTeamResponse");
+const Member_1 = require("../entities/Member");
 let TeamResolver = class TeamResolver {
     teams({ req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -40,7 +40,8 @@ let TeamResolver = class TeamResolver {
     invitedTeams({ req }) {
         return __awaiter(this, void 0, void 0, function* () {
             return typeorm_1.getConnection().query(`
-      select t.id,t.name from member m join team t on t.id = m."teamId" where m."userId" = $1
+      select t.id,t.name from member m join team t on t.id = m."teamId" 
+      where m."userId" = $1 and t."creatorId" != $1
       `, [req.session.userId]);
         });
     }
@@ -62,18 +63,19 @@ let TeamResolver = class TeamResolver {
        array_agg(json_build_object('id',c.id,'name',c.name,'teamId',c."teamId")) channels
        from team t 
        left join channel c on c."teamId" = $1 where t.id = $1
-
        group by t.id
+       limit 1
+
       `, [teamId]))[0];
-            console.log("here res buddy", res);
             return res;
         });
     }
     members(root) {
         return __awaiter(this, void 0, void 0, function* () {
             return typeorm_1.getConnection().query(`
-    select * from member m  join public.user u on u.id = m."userId" where m."teamId" = $1
-    `, [root.id]);
+select m.*,json_build_object('id',u.id,'username',u.username) as user  from member m join public.user 
+u on u.id = m."userId" where m."teamId" = $1
+`, [root.id]);
         });
     }
     createTeam(name, { req: { session: { userId }, }, }) {
@@ -109,6 +111,11 @@ let TeamResolver = class TeamResolver {
                         creatorId: userId,
                         name: "general",
                         teamId: newTeam.id,
+                    }).save();
+                    Member_1.Member.create({
+                        admin: true,
+                        teamId: newTeam.id,
+                        userId,
                     }).save();
                     return {
                         team: newTeam,
@@ -179,7 +186,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TeamResolver.prototype, "team", null);
 __decorate([
-    type_graphql_1.FieldResolver(() => [User_1.User], { nullable: true }),
+    type_graphql_1.FieldResolver(() => [Member_1.Member], { nullable: true }),
     __param(0, type_graphql_1.Root()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Team_1.Team]),

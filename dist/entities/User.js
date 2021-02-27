@@ -15,6 +15,7 @@ const typeorm_1 = require("typeorm");
 const Team_1 = require("./Team");
 const Message_1 = require("./Message");
 const Channel_1 = require("./Channel");
+const Member_1 = require("./Member");
 let User = class User extends typeorm_1.BaseEntity {
 };
 __decorate([
@@ -48,6 +49,10 @@ __decorate([
     typeorm_1.OneToMany(() => Message_1.Message, (message) => message.creator),
     __metadata("design:type", Array)
 ], User.prototype, "messages", void 0);
+__decorate([
+    typeorm_1.OneToMany(() => Member_1.Member, (member) => member.user),
+    __metadata("design:type", Array)
+], User.prototype, "members", void 0);
 __decorate([
     type_graphql_1.Field(() => String),
     typeorm_1.CreateDateColumn(),

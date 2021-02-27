@@ -12,6 +12,7 @@ import { Team } from "./Team";
 import { Message } from "./Message";
 import { Channel } from "./Channel";
 // import { Member } from "./Member";
+import { Member } from "./Member";
 
 @ObjectType()
 @Entity()
@@ -40,6 +41,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Message, (message) => message.creator)
   messages: Message[];
+
+  @OneToMany(() => Member, (member) => member.user)
+  members: Member[];
 
   // @OneToMany(() => Member, (member) => member.member)
   // members: Member[];

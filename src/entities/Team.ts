@@ -24,9 +24,8 @@ export class Team extends BaseEntity {
   @Column({ type: "varchar", unique: true })
   name!: string;
 
-  // @Field(() => User)
-  // @ManyToOne(() => User, (user) => user.teams)
-  // creator!: User;
+  @ManyToOne(() => User, (user) => user.teams)
+  creator!: User;
 
   @Field()
   @Column()
@@ -36,7 +35,7 @@ export class Team extends BaseEntity {
   @OneToMany(() => Channel, (channel) => channel.team)
   channels!: Channel[];
 
-  @Field(() => [User])
+  @Field(() => [Member])
   @OneToMany(() => Member, (member) => member.team, { cascade: true })
   members: Member[];
 

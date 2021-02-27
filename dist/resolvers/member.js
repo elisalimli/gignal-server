@@ -30,6 +30,11 @@ const isAuth_1 = require("../middlewares/isAuth");
 const VoidResponse_1 = require("../types/Response/VoidResponse");
 const AddTeamMemberInput_1 = require("../types/Input/AddTeamMemberInput");
 let MemberResolver = class MemberResolver {
+    isYou(root, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return req.session.userId === root.user.id;
+        });
+    }
     addTeamMember(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = [];
@@ -92,6 +97,13 @@ let MemberResolver = class MemberResolver {
         });
     }
 };
+__decorate([
+    type_graphql_1.FieldResolver(() => Boolean, { nullable: true }),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Member_1.Member, Object]),
+    __metadata("design:returntype", Promise)
+], MemberResolver.prototype, "isYou", null);
 __decorate([
     type_graphql_1.Mutation(() => VoidResponse_1.VoidResponse),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),

@@ -38,16 +38,14 @@ const main = async () => {
   });
 
   const app = express();
-  // const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
   const RedisStore = connectRedis(session);
   const redis = new Redis();
 
-  app.set("trust proxy", 1);
+  // app.set("trust proxy", 1);
   app.use(
     cors({
-      // origin: "http://localhost:3000",
-      origin: "https://gignal-frontend.herokuapp.com",
+      origin: "http://localhost:3000",
       credentials: true,
     })
   );
