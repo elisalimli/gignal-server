@@ -35,6 +35,8 @@ const message_1 = require("./resolvers/message");
 const team_1 = require("./resolvers/team");
 const user_1 = require("./resolvers/user");
 const CreateMessageCreatorLoader_1 = require("./DataLoaders/CreateMessageCreatorLoader");
+const DirectMessage_1 = require("./entities/DirectMessage");
+const directMessage_1 = require("./resolvers/directMessage");
 const PORT = process.env.PORT || 4000;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield typeorm_1.createConnection({
@@ -44,7 +46,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         password: "postgres",
         logging: true,
         synchronize: true,
-        entities: [User_1.User, Message_1.Message, Team_1.Team, Channel_1.Channel, Member_1.Member],
+        entities: [User_1.User, Message_1.Message, Team_1.Team, Channel_1.Channel, Member_1.Member, DirectMessage_1.DirectMessage],
     });
     const app = express_1.default();
     const RedisStore = connect_redis_1.default(express_session_1.default);
@@ -77,6 +79,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             team_1.TeamResolver,
             channel_1.ChannelResolver,
             member_1.MemberResolver,
+            directMessage_1.DirectMessageResolver,
         ],
         validate: false,
     });

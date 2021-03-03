@@ -7,37 +7,40 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Channel } from "./Channel";
 import { User } from "./User";
 
 @ObjectType()
-@Entity()
-export class Message extends BaseEntity {
+@Entity("direct_message")
+export class DirectMessage extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field(() => String)
+  @Field(() => Int)
   @Column()
-  text!: string;
+  teamId!: number;
 
   @Field(() => Int)
   @Column()
-  channelId!: number;
+  receiverId!: number;
+
+  @Field(() => Int)
+  @Column()
+  senderId!: number;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.messages)
+  @ManyToOne(() => User, (user) => user.directMessages)
   creator!: User;
 
-  @Field(() => Int)
+  @Field(() => String)
   @Column()
-  creatorId!: number;
+  text: string;
 
-  @Field(() => Channel)
-  @ManyToOne(() => Channel, (channel) => channel.messages, {
-    onDelete: "CASCADE",
-  })
-  channel!: Channel;
+  //   @Field(() => Channel)
+  //   @ManyToOne(() => Channel, (channel) => channel.messages, {
+  //     onDelete: "CASCADE",
+  //   })
+  //   channel!: Channel;
 
   @Field(() => String)
   @Column()

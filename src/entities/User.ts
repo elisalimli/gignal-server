@@ -12,6 +12,7 @@ import { Team } from "./Team";
 import { Message } from "./Message";
 import { Channel } from "./Channel";
 // import { Member } from "./Member";
+import { DirectMessage } from "./DirectMessage";
 import { Member } from "./Member";
 
 @ObjectType()
@@ -39,6 +40,9 @@ export class User extends BaseEntity {
   @OneToMany(() => Channel, (channel) => channel.users)
   channels: Channel[];
 
+  @OneToMany(() => DirectMessage, (directMessage) => directMessage.creator)
+  directMessages: DirectMessage[];
+
   @OneToMany(() => Message, (message) => message.creator)
   messages: Message[];
 
@@ -47,6 +51,9 @@ export class User extends BaseEntity {
 
   // @OneToMany(() => Member, (member) => member.member)
   // members: Member[];
+
+  @Field(() => Boolean)
+  isYou: boolean;
 
   @Field(() => String)
   @CreateDateColumn()

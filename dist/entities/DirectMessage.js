@@ -9,59 +9,55 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Team = void 0;
+exports.DirectMessage = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const User_1 = require("./User");
-const Channel_1 = require("./Channel");
-const Member_1 = require("./Member");
-let Team = class Team extends typeorm_1.BaseEntity {
+let DirectMessage = class DirectMessage extends typeorm_1.BaseEntity {
 };
 __decorate([
     type_graphql_1.Field(() => type_graphql_1.Int),
     typeorm_1.PrimaryGeneratedColumn(),
     __metadata("design:type", Number)
-], Team.prototype, "id", void 0);
+], DirectMessage.prototype, "id", void 0);
 __decorate([
-    type_graphql_1.Field(() => String),
-    typeorm_1.Column({ type: "varchar", unique: true }),
-    __metadata("design:type", String)
-], Team.prototype, "name", void 0);
-__decorate([
-    typeorm_1.ManyToOne(() => User_1.User, (user) => user.teams),
-    __metadata("design:type", User_1.User)
-], Team.prototype, "creator", void 0);
-__decorate([
-    type_graphql_1.Field(),
+    type_graphql_1.Field(() => type_graphql_1.Int),
     typeorm_1.Column(),
     __metadata("design:type", Number)
-], Team.prototype, "creatorId", void 0);
+], DirectMessage.prototype, "teamId", void 0);
 __decorate([
-    type_graphql_1.Field(() => [Channel_1.Channel]),
-    typeorm_1.OneToMany(() => Channel_1.Channel, (channel) => channel.team),
-    __metadata("design:type", Array)
-], Team.prototype, "channels", void 0);
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    typeorm_1.Column(),
+    __metadata("design:type", Number)
+], DirectMessage.prototype, "receiverId", void 0);
 __decorate([
-    typeorm_1.OneToMany(() => Member_1.Member, (member) => member.team, { cascade: true }),
-    __metadata("design:type", Array)
-], Team.prototype, "members", void 0);
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    typeorm_1.Column(),
+    __metadata("design:type", Number)
+], DirectMessage.prototype, "senderId", void 0);
 __decorate([
-    type_graphql_1.Field(() => [User_1.User]),
-    __metadata("design:type", Array)
-], Team.prototype, "directMessagesMembers", void 0);
+    type_graphql_1.Field(() => User_1.User),
+    typeorm_1.ManyToOne(() => User_1.User, (user) => user.directMessages),
+    __metadata("design:type", User_1.User)
+], DirectMessage.prototype, "creator", void 0);
 __decorate([
     type_graphql_1.Field(() => String),
-    typeorm_1.CreateDateColumn(),
-    __metadata("design:type", Date)
-], Team.prototype, "createdAt", void 0);
+    typeorm_1.Column(),
+    __metadata("design:type", String)
+], DirectMessage.prototype, "text", void 0);
+__decorate([
+    type_graphql_1.Field(() => String),
+    typeorm_1.Column(),
+    __metadata("design:type", String)
+], DirectMessage.prototype, "createdAt", void 0);
 __decorate([
     type_graphql_1.Field(() => String),
     typeorm_1.UpdateDateColumn(),
     __metadata("design:type", Date)
-], Team.prototype, "updatedAt", void 0);
-Team = __decorate([
+], DirectMessage.prototype, "updatedAt", void 0);
+DirectMessage = __decorate([
     type_graphql_1.ObjectType(),
-    typeorm_1.Entity()
-], Team);
-exports.Team = Team;
-//# sourceMappingURL=Team.js.map
+    typeorm_1.Entity("direct_message")
+], DirectMessage);
+exports.DirectMessage = DirectMessage;
+//# sourceMappingURL=DirectMessage.js.map

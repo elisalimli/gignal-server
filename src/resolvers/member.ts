@@ -18,11 +18,6 @@ import { AddTeamMemberInput } from "../types/Input/AddTeamMemberInput";
 
 @Resolver(Member)
 export class MemberResolver {
-  @FieldResolver(() => Boolean, { nullable: true })
-  async isYou(@Root() root: Member, @Ctx() { req }: MyContext) {
-    return req.session.userId === root.user.id;
-  }
-
   @Mutation(() => VoidResponse)
   @UseMiddleware(isAuth)
   async addTeamMember(

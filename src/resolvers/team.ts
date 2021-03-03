@@ -12,7 +12,6 @@ import {
 import { getConnection, getManager } from "typeorm";
 import { Channel } from "../entities/Channel";
 import { Team } from "../entities/Team";
-import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
 import { FieldError } from "../types/Error/FieldError";
 import { MyContext } from "../types/MyContext";
@@ -103,13 +102,14 @@ export class TeamResolver {
   }
 
   @FieldResolver(() => [Member], { nullable: true })
-  async members(@Root() root: Team) {
+  @UseMiddleware(isAuth)
+  async directMessagesMembers(@Root() root: Team, @Ctx() { req }: MyContext) {
     return getConnection().query(
       `
-select m.*,json_build_object('id',u.id,'username',u.username) as user  from member m join public.user 
-u on u.id = m."userId" where m."teamId" = $1
-`,
-      [root.id]
+       select distinct on (u.id) u.id,u.username  from direct_message dm join "user" u on (dm."receiverId" = u.id) or 
+       (dm."senderId" = u.id)  where (dm."receiverId" = $1 or dm."senderId" = $1) and dm."teamId" = $2 
+      `,
+      [req.session.userId, root.id]
     );
   }
 
@@ -212,5 +212,20 @@ u on u.id = m."userId" where m."teamId" = $1
         ],
       };
     }
+  }
+
+  @Query(() => [Member])
+  async getTeamMembers(
+    @Arg("teamId", () => Int) teamId: number,
+    @Ctx() { req }: MyContext
+  ): Promise<Member[]> {
+    console.log("get team members");
+    return getConnection().query(
+      `
+      select m.*,json_build_object('id',u.id,'username',u.username) "user" from member m
+      join public.user u on u.id = m."userId" where m."teamId" = $1 and m."userId" != $2
+      `,
+      [teamId, req.session.userId]
+    );
   }
 }

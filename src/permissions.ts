@@ -21,11 +21,18 @@ const createResolver = (resolver: any) => {
 
 // requiresAuth
 
+export const requiresAuth = createResolver(
+  async (parent: any, args: any, { connection }: MyContext) => {
+    const userId = connection.context?.req?.session.userId;
+    console.log("request", connection.context?.req?.session);
+    if (!userId) throw new Error("Not authenticated");
+  }
+);
+
 export const requiresTeamAccess = createResolver(
   async (parent: any, { channelId }: any, { connection }: MyContext) => {
+    console.log("permission start");
     const userId = connection.context?.req?.session.userId;
-
-    if (!userId) throw new Error("Not authenticated");
 
     const channel = (await Channel.findOne(channelId)) as Channel;
     if (!channel) {
@@ -39,15 +46,6 @@ export const requiresTeamAccess = createResolver(
         "You have to be a member of the team to subcribe to it's messages"
       );
     }
-
-    console.log("channel", channel);
-    // if (!user || !user.id) {
-    //   throw new Error("Not authenticated");
-    // }
-    // // check if part of the team
-    // const channel = await models.Channel.findOne({ where: { id: channelId } });
-    // const member = await models.Member.findOne({
-    //   where: { teamId: channel.teamId, userId: user.id },
-    // });
+    console.log("permission end");
   }
 );

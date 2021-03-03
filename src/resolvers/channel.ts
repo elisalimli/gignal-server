@@ -23,6 +23,7 @@ export class ChannelResolver {
     const { channelId: id, teamId } = input;
     const channel = await Channel.findOne({ where: { id, teamId } });
     if (!channel) return null;
+
     return channel;
   }
 

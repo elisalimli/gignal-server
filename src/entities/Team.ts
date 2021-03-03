@@ -35,9 +35,11 @@ export class Team extends BaseEntity {
   @OneToMany(() => Channel, (channel) => channel.team)
   channels!: Channel[];
 
-  @Field(() => [Member])
   @OneToMany(() => Member, (member) => member.team, { cascade: true })
   members: Member[];
+
+  @Field(() => [User])
+  directMessagesMembers: User[];
 
   @Field(() => String)
   @CreateDateColumn()

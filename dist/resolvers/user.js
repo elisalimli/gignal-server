@@ -41,13 +41,20 @@ let UserResolver = class UserResolver {
         return user.email;
     }
     me({ req }) {
-        const id = req.session.userId;
-        if (!id)
-            return null;
-        return User_1.User.findOne(id);
+        return __awaiter(this, void 0, void 0, function* () {
+            const id = req.session.userId;
+            if (!id)
+                return null;
+            return User_1.User.findOne(id);
+        });
     }
     allUsers() {
         return User_1.User.find();
+    }
+    isYou(root, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return req.session.userId === root.id;
+        });
     }
     login({ usernameOrEmail, password }, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -156,7 +163,7 @@ __decorate([
     __param(0, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "me", null);
 __decorate([
     type_graphql_1.Query(() => [User_1.User], { nullable: true }),
@@ -164,6 +171,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "allUsers", null);
+__decorate([
+    type_graphql_1.FieldResolver(() => Boolean),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "isYou", null);
 __decorate([
     type_graphql_1.Mutation(() => UserResponse_1.UserResponse),
     __param(0, type_graphql_1.Arg("input")),

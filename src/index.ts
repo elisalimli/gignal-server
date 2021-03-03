@@ -23,6 +23,8 @@ import { TeamResolver } from "./resolvers/team";
 import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types/MyContext";
 import { createMessageCreatorLoader } from "./DataLoaders/CreateMessageCreatorLoader";
+import { DirectMessage } from "./entities/DirectMessage";
+import { DirectMessageResolver } from "./resolvers/directMessage";
 
 const PORT = process.env.PORT || 4000;
 
@@ -34,7 +36,7 @@ const main = async () => {
     password: "postgres",
     logging: true,
     synchronize: true,
-    entities: [User, Message, Team, Channel, Member],
+    entities: [User, Message, Team, Channel, Member, DirectMessage],
   });
 
   const app = express();
@@ -75,6 +77,7 @@ const main = async () => {
       TeamResolver,
       ChannelResolver,
       MemberResolver,
+      DirectMessageResolver,
     ],
     validate: false,
   });

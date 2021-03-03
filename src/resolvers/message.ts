@@ -12,16 +12,14 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
-import { Channel } from "../entities/Channel";
-import { Member } from "../entities/Member";
 import { Message } from "../entities/Message";
 import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
 import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
-import { requiresTeamAccess } from "../permissions";
+import { requiresTeamAccess, requiresAuth } from "../permissions";
+import { NEW_CHANNEL_MESSAGE } from "../constants";
 
-const NEW_CHANNEL_MESSAGE = "NEW_CHANNEL_MESSAGE";
 const pubsub = new PubSub();
 
 @Resolver(Message)
@@ -31,6 +29,7 @@ export class MessageResolver {
   async messages(
     @Arg("channelId", () => Int) channelId: number
   ): Promise<Message[] | null> {
+    console.log("messsage hher");
     return getConnection().query(
       `
       select m.*,
@@ -77,30 +76,16 @@ export class MessageResolver {
   //   return withFilter(() => context.pubsub.asyncIterator('group'), filter)(rootValue, args, context);
   // },
   @Subscription(() => Message, {
-    subscribe: requiresTeamAccess.createResolver(
-      withFilter(
-        (_, args: any, { connection }: any) => {
-          const userId = connection.context?.req?.session?.userId;
-          // checking user is logged in
-          if (!userId) throw new Error("not auth");
-          return pubsub.asyncIterator(NEW_CHANNEL_MESSAGE);
-
-          // check user if part of the team
-          // return Channel.findOne(args.channelId).then((res) => {
-          //   Member.findOne({ where: { userId, teamId: res?.teamId } }).then(
-          //     (member) => {
-          //       // if (!member)
-          //       // throw new Error(
-          //       //   "You aren't part of the team,so you can't subscribe to its messages"
-          //       // );
-
-          //     }
-          //   );
-          // });
-        },
-        async (payload: Message, variables: { channelId: number }) => {
-          return variables.channelId === payload.channelId;
-        }
+    subscribe: requiresAuth.createResolver(
+      requiresTeamAccess.createResolver(
+        withFilter(
+          () => {
+            return pubsub.asyncIterator(NEW_CHANNEL_MESSAGE);
+          },
+          async (payload: Message, variables: { channelId: number }) => {
+            return variables.channelId === payload.channelId;
+          }
+        )
       )
     ),
   })

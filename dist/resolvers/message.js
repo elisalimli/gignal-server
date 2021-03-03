@@ -30,11 +30,12 @@ const User_1 = require("../entities/User");
 const isAuth_1 = require("../middlewares/isAuth");
 const CreateMessageInput_1 = require("../types/Input/CreateMessageInput");
 const permissions_1 = require("../permissions");
-const NEW_CHANNEL_MESSAGE = "NEW_CHANNEL_MESSAGE";
+const constants_1 = require("../constants");
 const pubsub = new graphql_subscriptions_1.PubSub();
 let MessageResolver = class MessageResolver {
     messages(channelId) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log("messsage hher");
             return typeorm_1.getConnection().query(`
       select m.*,
       json_build_object('id',u.id,
@@ -56,7 +57,7 @@ let MessageResolver = class MessageResolver {
             }).save();
             const asyncFo = () => __awaiter(this, void 0, void 0, function* () {
                 const currentUser = yield User_1.User.findOne(message.creatorId);
-                pubsub.publish(NEW_CHANNEL_MESSAGE, {
+                pubsub.publish(constants_1.NEW_CHANNEL_MESSAGE, {
                     channelId,
                     newMessageAdded: Object.assign(Object.assign({}, message), { creator: currentUser }),
                 });
@@ -88,15 +89,11 @@ __decorate([
 ], MessageResolver.prototype, "createMessage", null);
 __decorate([
     type_graphql_1.Subscription(() => Message_1.Message, {
-        subscribe: permissions_1.requiresTeamAccess.createResolver(graphql_subscriptions_1.withFilter((_, args, { connection }) => {
-            var _a, _b, _c;
-            const userId = (_c = (_b = (_a = connection.context) === null || _a === void 0 ? void 0 : _a.req) === null || _b === void 0 ? void 0 : _b.session) === null || _c === void 0 ? void 0 : _c.userId;
-            if (!userId)
-                throw new Error("not auth");
-            return pubsub.asyncIterator(NEW_CHANNEL_MESSAGE);
+        subscribe: permissions_1.requiresAuth.createResolver(permissions_1.requiresTeamAccess.createResolver(graphql_subscriptions_1.withFilter(() => {
+            return pubsub.asyncIterator(constants_1.NEW_CHANNEL_MESSAGE);
         }, (payload, variables) => __awaiter(void 0, void 0, void 0, function* () {
             return variables.channelId === payload.channelId;
-        }))),
+        })))),
     }),
     __param(0, type_graphql_1.Root()),
     __param(1, type_graphql_1.Arg("channelId", () => type_graphql_1.Int)),

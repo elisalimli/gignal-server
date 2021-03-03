@@ -27,17 +27,21 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  me(@Ctx() { req }: MyContext) {
+  async me(@Ctx() { req }: MyContext) {
     //user not logged in
     const id = req.session.userId;
     if (!id) return null;
-
     return User.findOne(id);
   }
 
   @Query(() => [User], { nullable: true })
   allUsers(): Promise<User[] | null> {
     return User.find();
+  }
+
+  @FieldResolver(() => Boolean)
+  async isYou(@Root() root: User, @Ctx() { req }: MyContext) {
+    return req.session.userId === root.id;
   }
 
   @Mutation(() => UserResponse)
