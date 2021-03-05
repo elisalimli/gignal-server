@@ -31,11 +31,10 @@ const isAuth_1 = require("../middlewares/isAuth");
 const CreateMessageInput_1 = require("../types/Input/CreateMessageInput");
 const permissions_1 = require("../permissions");
 const constants_1 = require("../constants");
-const pubsub = new graphql_subscriptions_1.PubSub();
+const pubsub_1 = require("../utils/pubsub");
 let MessageResolver = class MessageResolver {
     messages(channelId) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("messsage hher");
             return typeorm_1.getConnection().query(`
       select m.*,
       json_build_object('id',u.id,
@@ -57,8 +56,7 @@ let MessageResolver = class MessageResolver {
             }).save();
             const asyncFo = () => __awaiter(this, void 0, void 0, function* () {
                 const currentUser = yield User_1.User.findOne(message.creatorId);
-                pubsub.publish(constants_1.NEW_CHANNEL_MESSAGE, {
-                    channelId,
+                pubsub_1.pubsub.publish(constants_1.NEW_CHANNEL_MESSAGE, {
                     newMessageAdded: Object.assign(Object.assign({}, message), { creator: currentUser }),
                 });
             });
@@ -90,7 +88,7 @@ __decorate([
 __decorate([
     type_graphql_1.Subscription(() => Message_1.Message, {
         subscribe: permissions_1.requiresAuth.createResolver(permissions_1.requiresTeamAccess.createResolver(graphql_subscriptions_1.withFilter(() => {
-            return pubsub.asyncIterator(constants_1.NEW_CHANNEL_MESSAGE);
+            return pubsub_1.pubsub.asyncIterator(constants_1.NEW_CHANNEL_MESSAGE);
         }, (payload, variables) => __awaiter(void 0, void 0, void 0, function* () {
             return variables.channelId === payload.channelId;
         })))),

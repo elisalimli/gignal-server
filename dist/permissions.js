@@ -9,9 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requiresTeamAccess = exports.requiresAuth = void 0;
+exports.directMessageSubscriptionCheck = exports.requiresTeamAccess = exports.requiresAuth = void 0;
+const typeorm_1 = require("typeorm");
 const Channel_1 = require("./entities/Channel");
 const Member_1 = require("./entities/Member");
+const Team_1 = require("./entities/Team");
 const createResolver = (resolver) => {
     const baseResolver = resolver;
     baseResolver.createResolver = (childResolver) => {
@@ -43,6 +45,23 @@ exports.requiresTeamAccess = createResolver((parent, { channelId }, { connection
     });
     if (!member) {
         throw new Error("You have to be a member of the team to subcribe to it's messages");
+    }
+    console.log("permission end");
+}));
+exports.directMessageSubscriptionCheck = createResolver((parent, { input }, { connection }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _g, _h;
+    const { teamId, receiverId } = input;
+    console.log("permission start");
+    const userId = (_h = (_g = connection.context) === null || _g === void 0 ? void 0 : _g.req) === null || _h === void 0 ? void 0 : _h.session.userId;
+    const team = (yield Team_1.Team.findOne(teamId));
+    if (!team) {
+        throw new Error("Team cannot be founded");
+    }
+    const members = yield typeorm_1.getConnection().query(`
+      select * from member where "teamId" = $1 and ("userId" = $2 or "userId" = $3)
+      `, [teamId, userId, receiverId]);
+    if (members.length !== 2) {
+        throw new Error("Something went wrong");
     }
     console.log("permission end");
 }));

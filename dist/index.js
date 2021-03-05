@@ -17,7 +17,6 @@ const connect_redis_1 = __importDefault(require("connect-redis"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
-const graphql_subscriptions_1 = require("graphql-subscriptions");
 const http_1 = require("http");
 const ioredis_1 = __importDefault(require("ioredis"));
 require("reflect-metadata");
@@ -83,14 +82,12 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         ],
         validate: false,
     });
-    const pubsub = new graphql_subscriptions_1.PubSub();
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema,
         context: ({ req, res, connection }) => ({
             req,
             res,
             redis,
-            pubsub,
             connection,
             createMessageCreatorLoader: CreateMessageCreatorLoader_1.createMessageCreatorLoader(),
         }),

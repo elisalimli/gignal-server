@@ -1,5 +1,5 @@
 /* eslint-disable arrow-body-style */
-import { PubSub, withFilter } from "graphql-subscriptions";
+import { withFilter } from "graphql-subscriptions";
 import {
   Arg,
   Ctx,
@@ -19,8 +19,7 @@ import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
 import { requiresTeamAccess, requiresAuth } from "../permissions";
 import { NEW_CHANNEL_MESSAGE } from "../constants";
-
-const pubsub = new PubSub();
+import { pubsub } from "../utils/pubsub";
 
 @Resolver(Message)
 export class MessageResolver {
@@ -29,7 +28,6 @@ export class MessageResolver {
   async messages(
     @Arg("channelId", () => Int) channelId: number
   ): Promise<Message[] | null> {
-    console.log("messsage hher");
     return getConnection().query(
       `
       select m.*,
@@ -60,7 +58,6 @@ export class MessageResolver {
     const asyncFo = async () => {
       const currentUser = await User.findOne(message.creatorId);
       pubsub.publish(NEW_CHANNEL_MESSAGE, {
-        channelId,
         newMessageAdded: {
           ...message,
           creator: currentUser,
@@ -71,10 +68,6 @@ export class MessageResolver {
     return message;
   }
 
-  // async subscribe(rootValue,sad args, context) {
-  //   const userId = await getUserId(subscribeContext);
-  //   return withFilter(() => context.pubsub.asyncIterator('group'), filter)(rootValue, args, context);
-  // },
   @Subscription(() => Message, {
     subscribe: requiresAuth.createResolver(
       requiresTeamAccess.createResolver(

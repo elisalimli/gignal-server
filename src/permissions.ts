@@ -1,6 +1,9 @@
-import { MyContext } from "./types/MyContext";
+import { getConnection } from "typeorm";
 import { Channel } from "./entities/Channel";
 import { Member } from "./entities/Member";
+import { Team } from "./entities/Team";
+import { DirectMessageSubscriptionInput } from "./types/Input/DirectMessageSubscriptionInput";
+import { MyContext } from "./types/MyContext";
 
 const createResolver = (resolver: any) => {
   const baseResolver = resolver;
@@ -45,6 +48,30 @@ export const requiresTeamAccess = createResolver(
       throw new Error(
         "You have to be a member of the team to subcribe to it's messages"
       );
+    }
+    console.log("permission end");
+  }
+);
+
+export const directMessageSubscriptionCheck = createResolver(
+  async (parent: any, { input }: any, { connection }: MyContext) => {
+    const { teamId, receiverId }: DirectMessageSubscriptionInput = input;
+    console.log("permission start");
+    const userId = connection.context?.req?.session.userId;
+
+    const team = (await Team.findOne(teamId)) as Team;
+    if (!team) {
+      throw new Error("Team cannot be founded");
+    }
+
+    const members = await getConnection().query(
+      `
+      select * from member where "teamId" = $1 and ("userId" = $2 or "userId" = $3)
+      `,
+      [teamId, userId, receiverId]
+    );
+    if (members.length !== 2) {
+      throw new Error("Something went wrong");
     }
     console.log("permission end");
   }

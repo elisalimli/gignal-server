@@ -11,12 +11,12 @@ import {
 } from "type-graphql";
 import { getConnection, getManager } from "typeorm";
 import { Channel } from "../entities/Channel";
+import { Member } from "../entities/Member";
 import { Team } from "../entities/Team";
 import { isAuth } from "../middlewares/isAuth";
 import { FieldError } from "../types/Error/FieldError";
 import { MyContext } from "../types/MyContext";
 import { CreateTeamResponse } from "../types/Response/CreateTeamResponse";
-import { Member } from "../entities/Member";
 
 @Resolver(Team)
 export class TeamResolver {
@@ -106,8 +106,11 @@ export class TeamResolver {
   async directMessagesMembers(@Root() root: Team, @Ctx() { req }: MyContext) {
     return getConnection().query(
       `
-       select distinct on (u.id) u.id,u.username  from direct_message dm join "user" u on (dm."receiverId" = u.id) or 
-       (dm."senderId" = u.id)  where (dm."receiverId" = $1 or dm."senderId" = $1) and dm."teamId" = $2 
+       select distinct on (u.id) u.id,u.username  from direct_message
+        dm join "user" u on (dm."receiverId" = u.id) or 
+       (dm."senderId" = u.id)  where (dm."receiverId" = $1 or dm."senderId" = $1)
+        and dm."teamId" = $2 and u.id != $1 
+       
       `,
       [req.session.userId, root.id]
     );

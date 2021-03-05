@@ -27,8 +27,8 @@ const Member_1 = require("../entities/Member");
 const Team_1 = require("../entities/Team");
 const User_1 = require("../entities/User");
 const isAuth_1 = require("../middlewares/isAuth");
-const VoidResponse_1 = require("../types/Response/VoidResponse");
 const AddTeamMemberInput_1 = require("../types/Input/AddTeamMemberInput");
+const VoidResponse_1 = require("../types/Response/VoidResponse");
 let MemberResolver = class MemberResolver {
     addTeamMember(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -91,6 +91,11 @@ let MemberResolver = class MemberResolver {
             }
         });
     }
+    getMember(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return User_1.User.findOne(userId);
+        });
+    }
 };
 __decorate([
     type_graphql_1.Mutation(() => VoidResponse_1.VoidResponse),
@@ -101,6 +106,13 @@ __decorate([
     __metadata("design:paramtypes", [AddTeamMemberInput_1.AddTeamMemberInput, Object]),
     __metadata("design:returntype", Promise)
 ], MemberResolver.prototype, "addTeamMember", null);
+__decorate([
+    type_graphql_1.Query(() => User_1.User, { nullable: true }),
+    __param(0, type_graphql_1.Arg("userId", () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], MemberResolver.prototype, "getMember", null);
 MemberResolver = __decorate([
     type_graphql_1.Resolver(Member_1.Member)
 ], MemberResolver);

@@ -9,7 +9,7 @@ import { createServer } from "http";
 import Redis from "ioredis";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
-import { createConnection } from "typeorm";
+import { createConnection, getConnection } from "typeorm";
 import { COOKIE_NAME, isProduction } from "./constants";
 import { Channel } from "./entities/Channel";
 import { Member } from "./entities/Member";
@@ -82,7 +82,6 @@ const main = async () => {
     validate: false,
   });
 
-  const pubsub = new PubSub();
   const apolloServer = new ApolloServer({
     schema,
 
@@ -90,7 +89,6 @@ const main = async () => {
       req,
       res,
       redis,
-      pubsub,
       connection,
       createMessageCreatorLoader: createMessageCreatorLoader(),
     }),

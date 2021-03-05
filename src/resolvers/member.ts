@@ -1,10 +1,10 @@
 import {
   Arg,
   Ctx,
-  FieldResolver,
+  Int,
   Mutation,
+  Query,
   Resolver,
-  Root,
   UseMiddleware,
 } from "type-graphql";
 import { Member } from "../entities/Member";
@@ -12,9 +12,9 @@ import { Team } from "../entities/Team";
 import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
 import { FieldError } from "../types/Error/FieldError";
+import { AddTeamMemberInput } from "../types/Input/AddTeamMemberInput";
 import { MyContext } from "../types/MyContext";
 import { VoidResponse } from "../types/Response/VoidResponse";
-import { AddTeamMemberInput } from "../types/Input/AddTeamMemberInput";
 
 @Resolver(Member)
 export class MemberResolver {
@@ -85,5 +85,12 @@ export class MemberResolver {
         ],
       };
     }
+  }
+
+  @Query(() => User, { nullable: true })
+  async getMember(
+    @Arg("userId", () => Int) userId: number
+  ): Promise<User | null> {
+    return User.findOne(userId);
   }
 }

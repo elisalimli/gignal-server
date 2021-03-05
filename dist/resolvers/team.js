@@ -25,10 +25,10 @@ exports.TeamResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Channel_1 = require("../entities/Channel");
+const Member_1 = require("../entities/Member");
 const Team_1 = require("../entities/Team");
 const isAuth_1 = require("../middlewares/isAuth");
 const CreateTeamResponse_1 = require("../types/Response/CreateTeamResponse");
-const Member_1 = require("../entities/Member");
 let TeamResolver = class TeamResolver {
     teams({ req }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -73,8 +73,11 @@ let TeamResolver = class TeamResolver {
     directMessagesMembers(root, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             return typeorm_1.getConnection().query(`
-       select distinct on (u.id) u.id,u.username  from direct_message dm join "user" u on (dm."receiverId" = u.id) or 
-       (dm."senderId" = u.id)  where (dm."receiverId" = $1 or dm."senderId" = $1) and dm."teamId" = $2 
+       select distinct on (u.id) u.id,u.username  from direct_message
+        dm join "user" u on (dm."receiverId" = u.id) or 
+       (dm."senderId" = u.id)  where (dm."receiverId" = $1 or dm."senderId" = $1)
+        and dm."teamId" = $2 and u.id != $1 
+       
       `, [req.session.userId, root.id]);
         });
     }
