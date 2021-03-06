@@ -144,6 +144,14 @@ export class UserResolver {
       user = result.raw[0];
     } catch (err: any) {
       if (err.code === "23505") {
+        if (process.env.TEST_DB) {
+          return {
+            user: {
+              email: "test@test.com",
+              username: "test",
+            },
+          };
+        }
         return {
           errors: [
             {

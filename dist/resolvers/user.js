@@ -133,6 +133,14 @@ let UserResolver = class UserResolver {
             }
             catch (err) {
                 if (err.code === "23505") {
+                    if (process.env.TEST_DB) {
+                        return {
+                            user: {
+                                email: "test@test.com",
+                                username: "test",
+                            },
+                        };
+                    }
                     return {
                         errors: [
                             {

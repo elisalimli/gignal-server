@@ -29,13 +29,15 @@ import { DirectMessageResolver } from "./resolvers/directMessage";
 const PORT = process.env.PORT || 4000;
 
 const main = async () => {
+  const isTestMode = !!process.env.TEST_DB;
   await createConnection({
     type: "postgres",
-    database: "gignal",
+    database: process.env.TEST_DB || "gignal",
     username: "postgres",
     password: "postgres",
-    logging: true,
-    synchronize: true,
+    logging: !isTestMode,
+    synchronize: !isTestMode,
+
     entities: [User, Message, Team, Channel, Member, DirectMessage],
   });
 

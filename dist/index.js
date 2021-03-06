@@ -38,13 +38,14 @@ const DirectMessage_1 = require("./entities/DirectMessage");
 const directMessage_1 = require("./resolvers/directMessage");
 const PORT = process.env.PORT || 4000;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
+    const isTestMode = !!process.env.TEST_DB;
     yield typeorm_1.createConnection({
         type: "postgres",
-        database: "gignal",
+        database: process.env.TEST_DB || "gignal",
         username: "postgres",
         password: "postgres",
-        logging: true,
-        synchronize: true,
+        logging: !isTestMode,
+        synchronize: !isTestMode,
         entities: [User_1.User, Message_1.Message, Team_1.Team, Channel_1.Channel, Member_1.Member, DirectMessage_1.DirectMessage],
     });
     const app = express_1.default();

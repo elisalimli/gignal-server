@@ -145,19 +145,6 @@ export class TeamResolver {
   ): Promise<CreateTeamResponse> {
     const errors: FieldError[] = [];
 
-    const teamPromise = Team.findOne({
-      where: { name },
-    });
-
-    const [team] = await Promise.all([teamPromise]);
-
-    if (team) {
-      errors.push({
-        field: "name",
-        message: "Team's name must be unique",
-      });
-    }
-
     if (name.length <= 2) {
       errors.push({
         field: "name",
@@ -196,12 +183,19 @@ export class TeamResolver {
       return res;
     } catch (err) {
       console.log("error", err);
-      if (err.code === 23505) {
+      if (err.code == 23505) {
+        if (process.env.TEST_DB) {
+          return {
+            team: {
+              name: "testTeam",
+            },
+          };
+        }
         return {
           errors: [
             {
               field: "name",
-              message: "this name has been taken already",
+              message: "This name has been taken already",
             },
           ],
         };

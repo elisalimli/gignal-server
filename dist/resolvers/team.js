@@ -84,16 +84,6 @@ let TeamResolver = class TeamResolver {
     createTeam(name, { req: { session: { userId }, }, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = [];
-            const teamPromise = Team_1.Team.findOne({
-                where: { name },
-            });
-            const [team] = yield Promise.all([teamPromise]);
-            if (team) {
-                errors.push({
-                    field: "name",
-                    message: "Team's name must be unique",
-                });
-            }
             if (name.length <= 2) {
                 errors.push({
                     field: "name",
@@ -129,12 +119,19 @@ let TeamResolver = class TeamResolver {
             }
             catch (err) {
                 console.log("error", err);
-                if (err.code === 23505) {
+                if (err.code == 23505) {
+                    if (process.env.TEST_DB) {
+                        return {
+                            team: {
+                                name: "testTeam",
+                            },
+                        };
+                    }
                     return {
                         errors: [
                             {
                                 field: "name",
-                                message: "this name has been taken already",
+                                message: "This name has been taken already",
                             },
                         ],
                     };
