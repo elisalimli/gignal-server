@@ -69,6 +69,7 @@ export class MessageResolver {
       createReadStream().pipe(createWriteStream(path.join(__dirname, `../../files/${url}`)))
 
     }
+    console.log('sdsd')
 
 
     const message = await Message.create({
