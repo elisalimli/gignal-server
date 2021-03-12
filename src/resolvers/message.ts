@@ -59,8 +59,6 @@ export class MessageResolver {
 
     const { text, channelId, file } = input;
 
-
-
     if (file) {
       const { createReadStream, mimetype } = await file;
       url = v4()
@@ -69,8 +67,6 @@ export class MessageResolver {
       createReadStream().pipe(createWriteStream(path.join(__dirname, `../../files/${url}`)))
 
     }
-    console.log('sdsd')
-
 
     const message = await Message.create({
       text,
