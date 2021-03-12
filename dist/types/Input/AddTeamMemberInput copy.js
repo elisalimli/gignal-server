@@ -9,25 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateMessageInput = void 0;
-const graphql_upload_1 = require("graphql-upload");
+exports.AddTeamMemberInput = void 0;
 const type_graphql_1 = require("type-graphql");
-let CreateMessageInput = class CreateMessageInput {
+let AddTeamMemberInput = class AddTeamMemberInput {
 };
 __decorate([
     type_graphql_1.Field(() => type_graphql_1.Int),
     __metadata("design:type", Number)
-], CreateMessageInput.prototype, "channelId", void 0);
+], AddTeamMemberInput.prototype, "teamId", void 0);
 __decorate([
-    type_graphql_1.Field(() => String, { nullable: true }),
+    type_graphql_1.Field(),
     __metadata("design:type", String)
-], CreateMessageInput.prototype, "text", void 0);
-__decorate([
-    type_graphql_1.Field(() => graphql_upload_1.GraphQLUpload, { nullable: true }),
-    __metadata("design:type", Object)
-], CreateMessageInput.prototype, "file", void 0);
-CreateMessageInput = __decorate([
+], AddTeamMemberInput.prototype, "email", void 0);
+AddTeamMemberInput = __decorate([
     type_graphql_1.InputType()
-], CreateMessageInput);
-exports.CreateMessageInput = CreateMessageInput;
-//# sourceMappingURL=CreateMessageInput.js.map
+], AddTeamMemberInput);
+exports.AddTeamMemberInput = AddTeamMemberInput;
+//# sourceMappingURL=AddTeamMemberInput%20copy.js.map

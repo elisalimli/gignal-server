@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
 import { withFilter } from "graphql-subscriptions";
 import {
   Arg,
   Ctx,
+  FieldResolver,
   Mutation,
   Query,
   Resolver,
@@ -184,4 +186,6 @@ export class DirectMessageResolver {
   ) {
     return root.newDirectMessageAdded;
   }
+
+
 }

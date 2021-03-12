@@ -1,25 +1,30 @@
 /* eslint-disable arrow-body-style */
+import { createWriteStream } from "fs";
 import { withFilter } from "graphql-subscriptions";
+import path from 'path';
 import {
   Arg,
   Ctx,
+  FieldResolver,
   Int,
   Mutation,
   Query,
   Resolver,
   Root,
   Subscription,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
 import { getConnection } from "typeorm";
+import { v4 } from 'uuid';
+import { NEW_CHANNEL_MESSAGE } from "../constants";
 import { Message } from "../entities/Message";
 import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
+import { requiresAuth, requiresTeamAccess } from "../permissions";
 import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
-import { requiresTeamAccess, requiresAuth } from "../permissions";
-import { NEW_CHANNEL_MESSAGE } from "../constants";
 import { pubsub } from "../utils/pubsub";
+
 
 @Resolver(Message)
 export class MessageResolver {
@@ -41,22 +46,43 @@ export class MessageResolver {
     );
   }
 
+
+
   @Mutation(() => Message)
   @UseMiddleware(isAuth)
   async createMessage(
     @Arg("input") input: CreateMessageInput,
     @Ctx() { req }: MyContext
   ) {
-    const { text, channelId } = input;
+    let url = null;
+    let fileType = null;
+
+    const { text, channelId, file } = input;
+
+
+
+    if (file) {
+      const { createReadStream, mimetype } = await file;
+      url = v4()
+      console.log(typeof url, typeof mimetype)
+      fileType = mimetype
+      createReadStream().pipe(createWriteStream(path.join(__dirname, `../../files/${url}`)))
+
+    }
+
+
     const message = await Message.create({
       text,
       channelId,
+      url: url?.toString(),
+      fileType: fileType?.toString(),
       creatorId: req.session.userId,
       createdAt: new Date().toISOString(),
     }).save();
-    //ads
+
     const asyncFo = async () => {
       const currentUser = await User.findOne(message.creatorId);
+
       pubsub.publish(NEW_CHANNEL_MESSAGE, {
         newMessageAdded: {
           ...message,
@@ -75,8 +101,9 @@ export class MessageResolver {
           () => {
             return pubsub.asyncIterator(NEW_CHANNEL_MESSAGE);
           },
-          async (payload: Message, variables: { channelId: number }) => {
-            return variables.channelId === payload.channelId;
+          async (payload, { channelId }) => {
+            const message: Message = payload.newMessageAdded;
+            return message.channelId === channelId;
           }
         )
       )
@@ -89,4 +116,11 @@ export class MessageResolver {
   ) {
     return root.newMessageAdded;
   }
+
+  @FieldResolver(() => String, { nullable: true })
+  url(@Root() root: Message) {
+    return root.url ? `http://localhost:4000/files/${root.url}` : root.url
+  }
+
+
 }

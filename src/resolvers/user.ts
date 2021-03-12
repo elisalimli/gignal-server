@@ -18,6 +18,7 @@ import { MyContext } from "../types/MyContext";
 import { UserResponse } from "../types/Response/UserResponse";
 import { validateRegister } from "../utils/validations/validateRegister";
 
+
 @Resolver(User)
 export class UserResolver {
   @FieldResolver(() => String)
@@ -144,14 +145,14 @@ export class UserResolver {
       user = result.raw[0];
     } catch (err: any) {
       if (err.code === "23505") {
-        if (process.env.TEST_DB) {
-          return {
-            user: {
-              email: "test@test.com",
-              username: "test",
-            },
-          };
-        }
+        // if (process.env.TEST_DB) {
+        //   return {
+        //     user: {
+        //       email: "test@test.com",
+        //       username: "test",
+        //     },
+        //   };
+        // }
         return {
           errors: [
             {

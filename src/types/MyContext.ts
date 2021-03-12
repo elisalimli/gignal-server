@@ -5,7 +5,7 @@ import { createChannelLoader } from "../DataLoaders/CreateChannelLoader";
 export interface MyContext {
   req: Request & {
     session: Session &
-      Partial<SessionData> & { userId?: number; username?: string };
+    Partial<SessionData> & { userId?: number };
   };
   res: Response & any;
   redis: Redis;

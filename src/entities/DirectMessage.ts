@@ -36,12 +36,6 @@ export class DirectMessage extends BaseEntity {
   @Column()
   text: string;
 
-  //   @Field(() => Channel)
-  //   @ManyToOne(() => Channel, (channel) => channel.messages, {
-  //     onDelete: "CASCADE",
-  //   })
-  //   channel!: Channel;
-
   @Field(() => String)
   @Column()
   createdAt: String;
@@ -50,7 +44,4 @@ export class DirectMessage extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  //   @Field()
-  //   @ManyToOne(() => User, (user) => user.posts)
-  //   creator!: User;
 }

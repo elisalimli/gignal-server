@@ -17,9 +17,17 @@ export class Message extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field(() => String)
-  @Column()
-  text!: string;
+  @Field(() => String, { nullable: true })
+  @Column({ nullable: true })
+  text: string;
+
+  @Field(() => String, { nullable: true })
+  @Column({ nullable: true })
+  url: string;
+
+  @Field(() => String, { nullable: true })
+  @Column({ nullable: true })
+  fileType: string;
 
   @Field(() => Int)
   @Column()
@@ -47,7 +55,5 @@ export class Message extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  //   @Field()
-  //   @ManyToOne(() => User, (user) => user.posts)
-  //   creator!: User;
+
 }

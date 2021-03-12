@@ -157,10 +157,19 @@ export class TeamResolver {
       };
     try {
       const res = await getManager().transaction(async () => {
-        const newTeam = await Team.create({
-          name,
-          creatorId: userId,
-        }).save();
+        const result = await getConnection()
+          .createQueryBuilder()
+          .insert()
+          .into(Team)
+          .values({
+            name,
+            creatorId: userId,
+          })
+          .returning("*")
+          .execute();
+        const newTeam = result.raw[0];
+
+        console.log("team here", newTeam);
 
         const { id } = await Channel.create({
           creatorId: userId,
@@ -184,18 +193,11 @@ export class TeamResolver {
     } catch (err) {
       console.log("error", err);
       if (err.code == 23505) {
-        if (process.env.TEST_DB) {
-          return {
-            team: {
-              name: "testTeam",
-            },
-          };
-        }
         return {
           errors: [
             {
               field: "name",
-              message: "This name has been taken already",
+              message: "This name has b0een taken already",
             },
           ],
         };

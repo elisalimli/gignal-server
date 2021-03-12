@@ -96,10 +96,18 @@ let TeamResolver = class TeamResolver {
                 };
             try {
                 const res = yield typeorm_1.getManager().transaction(() => __awaiter(this, void 0, void 0, function* () {
-                    const newTeam = yield Team_1.Team.create({
+                    const result = yield typeorm_1.getConnection()
+                        .createQueryBuilder()
+                        .insert()
+                        .into(Team_1.Team)
+                        .values({
                         name,
                         creatorId: userId,
-                    }).save();
+                    })
+                        .returning("*")
+                        .execute();
+                    const newTeam = result.raw[0];
+                    console.log("team here", newTeam);
                     const { id } = yield Channel_1.Channel.create({
                         creatorId: userId,
                         name: "general",
@@ -120,18 +128,11 @@ let TeamResolver = class TeamResolver {
             catch (err) {
                 console.log("error", err);
                 if (err.code == 23505) {
-                    if (process.env.TEST_DB) {
-                        return {
-                            team: {
-                                name: "testTeam",
-                            },
-                        };
-                    }
                     return {
                         errors: [
                             {
                                 field: "name",
-                                message: "This name has been taken already",
+                                message: "This name has b0een taken already",
                             },
                         ],
                     };

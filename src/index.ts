@@ -1,30 +1,34 @@
 /* eslint-disable no-new */
-import { ApolloServer } from "apollo-server-express";
-import connectRedis from "connect-redis";
-import cors from "cors";
-import express from "express";
-import session from "express-session";
-import { PubSub } from "graphql-subscriptions";
-import { createServer } from "http";
-import Redis from "ioredis";
+import { IncomingForm } from "formidable";
+import { graphqlUploadExpress } from "graphql-upload";
 import "reflect-metadata";
-import { buildSchema } from "type-graphql";
-import { createConnection, getConnection } from "typeorm";
-import { COOKIE_NAME, isProduction } from "./constants";
-import { Channel } from "./entities/Channel";
-import { Member } from "./entities/Member";
-import { Message } from "./entities/Message";
-import { Team } from "./entities/Team";
-import { User } from "./entities/User";
-import { ChannelResolver } from "./resolvers/channel";
-import { MemberResolver } from "./resolvers/member";
-import { MessageResolver } from "./resolvers/message";
-import { TeamResolver } from "./resolvers/team";
-import { UserResolver } from "./resolvers/user";
+import {
+  ApolloServer,
+  buildSchema,
+  Channel,
+  ChannelResolver,
+  connectRedis,
+  COOKIE_NAME,
+  cors,
+  createConnection,
+  createMessageCreatorLoader,
+  createServer,
+  DirectMessage,
+  DirectMessageResolver,
+  express,
+  isProduction,
+  Member,
+  MemberResolver,
+  Message,
+  MessageResolver,
+  Redis,
+  session,
+  Team,
+  TeamResolver,
+  User,
+  UserResolver,
+} from "./indexImports";
 import { MyContext } from "./types/MyContext";
-import { createMessageCreatorLoader } from "./DataLoaders/CreateMessageCreatorLoader";
-import { DirectMessage } from "./entities/DirectMessage";
-import { DirectMessageResolver } from "./resolvers/directMessage";
 
 const PORT = process.env.PORT || 4000;
 
@@ -53,6 +57,13 @@ const main = async () => {
       credentials: true,
     })
   );
+
+  app.use(
+    "/graphql",
+    graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })
+  );
+
+  app.use('/files', express.static('files'))
 
   const sessionMiddleware = session({
     name: COOKIE_NAME,
@@ -94,6 +105,9 @@ const main = async () => {
       connection,
       createMessageCreatorLoader: createMessageCreatorLoader(),
     }),
+    // uploads: { maxFileSize: 10000000, maxFiles: 10 },
+    uploads: false,
+
     subscriptions: {
       path: "/subscriptions",
       onConnect: async (_, { upgradeReq }: any) =>
