@@ -90,7 +90,7 @@ export class MemberResolver {
   @Query(() => User, { nullable: true })
   async getMember(
     @Arg("userId", () => Int) userId: number
-  ): Promise<User | null> {
+  ): Promise<User | undefined> {
     return User.findOne(userId);
   }
 }

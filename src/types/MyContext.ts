@@ -1,6 +1,5 @@
 import { Session, SessionData } from "express-session";
 import { Redis } from "ioredis";
-import { createChannelLoader } from "../DataLoaders/CreateChannelLoader";
 
 export interface MyContext {
   req: Request & {
@@ -9,6 +8,5 @@ export interface MyContext {
   };
   res: Response & any;
   redis: Redis;
-  channelLoader: ReturnType<typeof createChannelLoader>;
   connection: any;
 }

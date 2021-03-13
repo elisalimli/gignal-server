@@ -1,7 +1,7 @@
 /* eslint-disable no-new */
-import { IncomingForm } from "formidable";
 import { graphqlUploadExpress } from "graphql-upload";
 import "reflect-metadata";
+import { MAX_FILE_SIZE } from "./constants";
 import {
   ApolloServer,
   buildSchema,
@@ -10,9 +10,7 @@ import {
   connectRedis,
   COOKIE_NAME,
   cors,
-  createConnection,
-  createMessageCreatorLoader,
-  createServer,
+  createConnection, createServer,
   DirectMessage,
   DirectMessageResolver,
   express,
@@ -26,7 +24,7 @@ import {
   Team,
   TeamResolver,
   User,
-  UserResolver,
+  UserResolver
 } from "./indexImports";
 import { MyContext } from "./types/MyContext";
 
@@ -58,9 +56,10 @@ const main = async () => {
     })
   );
 
+
   app.use(
     "/graphql",
-    graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })
+    graphqlUploadExpress({ maxFileSize: MAX_FILE_SIZE, maxFiles: 10 })
   );
 
   app.use('/files', express.static('files'))
@@ -103,7 +102,6 @@ const main = async () => {
       res,
       redis,
       connection,
-      createMessageCreatorLoader: createMessageCreatorLoader(),
     }),
     // uploads: { maxFileSize: 10000000, maxFiles: 10 },
     uploads: false,

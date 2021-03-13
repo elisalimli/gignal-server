@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const graphql_upload_1 = require("graphql-upload");
 require("reflect-metadata");
+const constants_1 = require("./constants");
 const indexImports_1 = require("./indexImports");
 const PORT = process.env.PORT || 4000;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -31,7 +32,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         origin: "http://localhost:3000",
         credentials: true,
     }));
-    app.use("/graphql", graphql_upload_1.graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+    app.use("/graphql", graphql_upload_1.graphqlUploadExpress({ maxFileSize: constants_1.MAX_FILE_SIZE, maxFiles: 10 }));
     app.use('/files', indexImports_1.express.static('files'));
     const sessionMiddleware = indexImports_1.session({
         name: indexImports_1.COOKIE_NAME,
@@ -68,7 +69,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             res,
             redis,
             connection,
-            createMessageCreatorLoader: indexImports_1.createMessageCreatorLoader(),
         }),
         uploads: false,
         subscriptions: {

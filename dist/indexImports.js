@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMessageCreatorLoader = exports.DirectMessageResolver = exports.DirectMessage = exports.UserResolver = exports.MessageResolver = exports.TeamResolver = exports.MemberResolver = exports.ChannelResolver = exports.Team = exports.User = exports.Message = exports.Member = exports.Channel = exports.isProduction = exports.COOKIE_NAME = exports.getConnection = exports.createConnection = exports.buildSchema = exports.Redis = exports.createServer = exports.PubSub = exports.session = exports.express = exports.ApolloServer = exports.cors = exports.connectRedis = void 0;
+exports.DirectMessageResolver = exports.DirectMessage = exports.UserResolver = exports.MessageResolver = exports.TeamResolver = exports.MemberResolver = exports.ChannelResolver = exports.Team = exports.User = exports.Message = exports.Member = exports.Channel = exports.isProduction = exports.COOKIE_NAME = exports.getConnection = exports.createConnection = exports.buildSchema = exports.Redis = exports.createServer = exports.PubSub = exports.session = exports.express = exports.ApolloServer = exports.cors = exports.connectRedis = void 0;
 const apollo_server_express_1 = require("apollo-server-express");
 Object.defineProperty(exports, "ApolloServer", { enumerable: true, get: function () { return apollo_server_express_1.ApolloServer; } });
 const connect_redis_1 = __importDefault(require("connect-redis"));
@@ -30,6 +30,8 @@ Object.defineProperty(exports, "COOKIE_NAME", { enumerable: true, get: function 
 Object.defineProperty(exports, "isProduction", { enumerable: true, get: function () { return constants_1.isProduction; } });
 const Channel_1 = require("./entities/Channel");
 Object.defineProperty(exports, "Channel", { enumerable: true, get: function () { return Channel_1.Channel; } });
+const DirectMessage_1 = require("./entities/DirectMessage");
+Object.defineProperty(exports, "DirectMessage", { enumerable: true, get: function () { return DirectMessage_1.DirectMessage; } });
 const Member_1 = require("./entities/Member");
 Object.defineProperty(exports, "Member", { enumerable: true, get: function () { return Member_1.Member; } });
 const Message_1 = require("./entities/Message");
@@ -40,6 +42,8 @@ const User_1 = require("./entities/User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 const channel_1 = require("./resolvers/channel");
 Object.defineProperty(exports, "ChannelResolver", { enumerable: true, get: function () { return channel_1.ChannelResolver; } });
+const directMessage_1 = require("./resolvers/directMessage");
+Object.defineProperty(exports, "DirectMessageResolver", { enumerable: true, get: function () { return directMessage_1.DirectMessageResolver; } });
 const member_1 = require("./resolvers/member");
 Object.defineProperty(exports, "MemberResolver", { enumerable: true, get: function () { return member_1.MemberResolver; } });
 const message_1 = require("./resolvers/message");
@@ -48,10 +52,4 @@ const team_1 = require("./resolvers/team");
 Object.defineProperty(exports, "TeamResolver", { enumerable: true, get: function () { return team_1.TeamResolver; } });
 const user_1 = require("./resolvers/user");
 Object.defineProperty(exports, "UserResolver", { enumerable: true, get: function () { return user_1.UserResolver; } });
-const CreateMessageCreatorLoader_1 = require("./DataLoaders/CreateMessageCreatorLoader");
-Object.defineProperty(exports, "createMessageCreatorLoader", { enumerable: true, get: function () { return CreateMessageCreatorLoader_1.createMessageCreatorLoader; } });
-const DirectMessage_1 = require("./entities/DirectMessage");
-Object.defineProperty(exports, "DirectMessage", { enumerable: true, get: function () { return DirectMessage_1.DirectMessage; } });
-const directMessage_1 = require("./resolvers/directMessage");
-Object.defineProperty(exports, "DirectMessageResolver", { enumerable: true, get: function () { return directMessage_1.DirectMessageResolver; } });
 //# sourceMappingURL=indexImports.js.map

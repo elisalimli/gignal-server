@@ -20,6 +20,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -38,6 +45,7 @@ const isAuth_1 = require("../middlewares/isAuth");
 const permissions_1 = require("../permissions");
 const CreateMessageInput_1 = require("../types/Input/CreateMessageInput");
 const pubsub_1 = require("../utils/pubsub");
+const CreateMessageResponse_1 = require("../types/Response/CreateMessageResponse");
 let MessageResolver = class MessageResolver {
     messages(channelId) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -52,15 +60,41 @@ let MessageResolver = class MessageResolver {
         });
     }
     createMessage(input, { req }) {
+        var e_1, _a;
         return __awaiter(this, void 0, void 0, function* () {
             let url = null;
             let fileType = null;
             const { text, channelId, file } = input;
             if (file) {
-                const { createReadStream, mimetype } = yield file;
-                url = uuid_1.v4();
-                console.log(typeof url, typeof mimetype);
+                const { createReadStream, mimetype, filename } = yield file;
+                const uploadStream = createReadStream();
+                let byteLength = 0;
+                try {
+                    for (var uploadStream_1 = __asyncValues(uploadStream), uploadStream_1_1; uploadStream_1_1 = yield uploadStream_1.next(), !uploadStream_1_1.done;) {
+                        const uploadChunk = uploadStream_1_1.value;
+                        byteLength += uploadChunk.byteLength;
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (uploadStream_1_1 && !uploadStream_1_1.done && (_a = uploadStream_1.return)) yield _a.call(uploadStream_1);
+                    }
+                    finally { if (e_1) throw e_1.error; }
+                }
+                if (byteLength >= constants_1.MAX_FILE_SIZE) {
+                    return {
+                        errors: [
+                            {
+                                field: 'size',
+                                message: `File size must be less than ${constants_1.MAX_FILE_SIZE / 1000000}MB`
+                            }
+                        ]
+                    };
+                }
                 fileType = mimetype;
+                const splittedFileType = filename.split('.');
+                url = `${uuid_1.v4()}.${splittedFileType[splittedFileType.length - 1]}`;
                 createReadStream().pipe(fs_1.createWriteStream(path_1.default.join(__dirname, `../../files/${url}`)));
             }
             const message = yield Message_1.Message.create({
@@ -78,7 +112,9 @@ let MessageResolver = class MessageResolver {
                 });
             });
             asyncFo();
-            return message;
+            return {
+                message
+            };
         });
     }
     newMessageAdded(root, channelId) {
@@ -97,7 +133,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MessageResolver.prototype, "messages", null);
 __decorate([
-    type_graphql_1.Mutation(() => Message_1.Message),
+    type_graphql_1.Mutation(() => CreateMessageResponse_1.CreateMessageResponse),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
     __param(0, type_graphql_1.Arg("input")),
     __param(1, type_graphql_1.Ctx()),

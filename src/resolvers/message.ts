@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable arrow-body-style */
 import { createWriteStream } from "fs";
 import { withFilter } from "graphql-subscriptions";
@@ -16,7 +17,7 @@ import {
 } from "type-graphql";
 import { getConnection } from "typeorm";
 import { v4 } from 'uuid';
-import { NEW_CHANNEL_MESSAGE } from "../constants";
+import { NEW_CHANNEL_MESSAGE, MAX_FILE_SIZE } from '../constants';
 import { Message } from "../entities/Message";
 import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
@@ -24,7 +25,7 @@ import { requiresAuth, requiresTeamAccess } from "../permissions";
 import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
 import { pubsub } from "../utils/pubsub";
-
+import { CreateMessageResponse } from '../types/Response/CreateMessageResponse';
 
 @Resolver(Message)
 export class MessageResolver {
@@ -48,22 +49,39 @@ export class MessageResolver {
 
 
 
-  @Mutation(() => Message)
+  @Mutation(() => CreateMessageResponse)
   @UseMiddleware(isAuth)
   async createMessage(
     @Arg("input") input: CreateMessageInput,
     @Ctx() { req }: MyContext
-  ) {
+  ): Promise<CreateMessageResponse> {
+
     let url = null;
     let fileType = null;
 
     const { text, channelId, file } = input;
-
     if (file) {
-      const { createReadStream, mimetype } = await file;
-      url = v4()
-      console.log(typeof url, typeof mimetype)
-      fileType = mimetype
+      const { createReadStream, mimetype, filename } = await file;
+      const uploadStream = createReadStream();
+      let byteLength = 0;
+      for await (const uploadChunk of uploadStream) {
+        byteLength += (uploadChunk as Buffer).byteLength;
+      }
+      if (byteLength >= MAX_FILE_SIZE) {
+        return {
+          errors: [
+            {
+              field: 'size',
+              message: `File size must be less than ${MAX_FILE_SIZE / 1000000}MB`
+            }
+          ]
+        }
+      }
+
+      fileType = mimetype;
+      const splittedFileType = filename.split('.')
+      url = `${v4()}.${splittedFileType[splittedFileType.length - 1]}`
+
       createReadStream().pipe(createWriteStream(path.join(__dirname, `../../files/${url}`)))
 
     }
@@ -88,7 +106,9 @@ export class MessageResolver {
       });
     };
     asyncFo();
-    return message;
+    return {
+      message
+    };
   }
 
   @Subscription(() => Message, {

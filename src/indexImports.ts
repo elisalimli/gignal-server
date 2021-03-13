@@ -10,19 +10,17 @@ import { buildSchema } from "type-graphql";
 import { createConnection, getConnection } from "typeorm";
 import { COOKIE_NAME, isProduction } from "./constants";
 import { Channel } from "./entities/Channel";
+import { DirectMessage } from "./entities/DirectMessage";
 import { Member } from "./entities/Member";
 import { Message } from "./entities/Message";
 import { Team } from "./entities/Team";
 import { User } from "./entities/User";
 import { ChannelResolver } from "./resolvers/channel";
+import { DirectMessageResolver } from "./resolvers/directMessage";
 import { MemberResolver } from "./resolvers/member";
 import { MessageResolver } from "./resolvers/message";
 import { TeamResolver } from "./resolvers/team";
 import { UserResolver } from "./resolvers/user";
-import { createMessageCreatorLoader } from "./DataLoaders/CreateMessageCreatorLoader";
-import { DirectMessage } from "./entities/DirectMessage";
-import { DirectMessageResolver } from "./resolvers/directMessage";
-import {} from "graphql-upload";
 
 export {
   connectRedis,
@@ -50,5 +48,5 @@ export {
   UserResolver,
   DirectMessage,
   DirectMessageResolver,
-  createMessageCreatorLoader,
 };
+
