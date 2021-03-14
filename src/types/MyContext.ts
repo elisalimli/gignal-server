@@ -9,4 +9,5 @@ export interface MyContext {
   res: Response & any;
   redis: Redis;
   connection: any;
+  bucket: any;
 }

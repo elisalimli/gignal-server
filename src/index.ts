@@ -1,5 +1,8 @@
 /* eslint-disable no-new */
+import { Storage } from '@google-cloud/storage';
+import dotenv from 'dotenv';
 import { graphqlUploadExpress } from "graphql-upload";
+import path from 'path';
 import "reflect-metadata";
 import { MAX_FILE_SIZE } from "./constants";
 import {
@@ -56,10 +59,14 @@ const main = async () => {
     })
   );
 
+  dotenv.config()
+
+  const gc = new Storage({ keyFilename: path.join(__dirname, '../gignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.jsongignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.json'), projectId: "gignal-92ee9" })
+  const gignalBucket = gc.bucket('gignal-92ee9.appspot.com')
 
   app.use(
     "/graphql",
-    graphqlUploadExpress({ maxFileSize: MAX_FILE_SIZE, maxFiles: 10 })
+    graphqlUploadExpress({ maxFiles: 10 })
   );
 
   app.use('/files', express.static('files'))
@@ -102,6 +109,8 @@ const main = async () => {
       res,
       redis,
       connection,
+      bucket: gignalBucket
+
     }),
     // uploads: { maxFileSize: 10000000, maxFiles: 10 },
     uploads: false,
@@ -125,10 +134,10 @@ const main = async () => {
 
   apolloServer.installSubscriptionHandlers(httpServer);
   //a
-  httpServer.listen(PORT, () => {
-    console.log(`server listening on port ${PORT}`);
+  httpServer.listen(process.env.PORT, () => {
+    console.log(`server listening on port ${process.env.PORT}`);
     console.log(
-      `Subscriptions ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`
+      `Subscriptions ready at ws://localhost:${process.env.PORT}${apolloServer.subscriptionsPath}`
     );
   });
 };

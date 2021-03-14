@@ -2,6 +2,7 @@
 /* eslint-disable arrow-body-style */
 import { createWriteStream } from "fs";
 import { withFilter } from "graphql-subscriptions";
+import os from 'os';
 import path from 'path';
 import {
   Arg,
@@ -17,15 +18,17 @@ import {
 } from "type-graphql";
 import { getConnection } from "typeorm";
 import { v4 } from 'uuid';
-import { NEW_CHANNEL_MESSAGE, MAX_FILE_SIZE } from '../constants';
+import { MAX_FILE_SIZE, NEW_CHANNEL_MESSAGE } from '../constants';
 import { Message } from "../entities/Message";
 import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
 import { requiresAuth, requiresTeamAccess } from "../permissions";
 import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
-import { pubsub } from "../utils/pubsub";
 import { CreateMessageResponse } from '../types/Response/CreateMessageResponse';
+import { pubsub } from "../utils/pubsub";
+import admin from '../utils/cloudAdmin';
+
 
 @Resolver(Message)
 export class MessageResolver {
@@ -47,16 +50,13 @@ export class MessageResolver {
     );
   }
 
-
-
   @Mutation(() => CreateMessageResponse)
   @UseMiddleware(isAuth)
   async createMessage(
     @Arg("input") input: CreateMessageInput,
-    @Ctx() { req }: MyContext
+    @Ctx() { req, bucket }: MyContext
   ): Promise<CreateMessageResponse> {
-
-    let url = null;
+    let url: string | null = null;
     let fileType = null;
 
     const { text, channelId, file } = input;
@@ -82,8 +82,17 @@ export class MessageResolver {
       const splittedFileType = filename.split('.')
       url = `${v4()}.${splittedFileType[splittedFileType.length - 1]}`
 
-      createReadStream().pipe(createWriteStream(path.join(__dirname, `../../files/${url}`)))
-
+      const test = await new Promise(res =>
+        createReadStream()
+          .pipe(
+            bucket.file(url).createWriteStream({
+              resumable: false,
+              gzip: true
+            })
+          )
+          .on("finish", res)
+      );
+      console.log('test', test)
     }
 
     const message = await Message.create({
@@ -136,8 +145,7 @@ export class MessageResolver {
 
   @FieldResolver(() => String, { nullable: true })
   url(@Root() root: Message) {
-    return root.url ? `http://localhost:4000/files/${root.url}` : root.url
+    return root.url ? `https://firebasestorage.googleapis.com/v0/b/${process.env.GOOGLE_STORAGE_PROJECT_NAME}/o/${root.url}?alt=media` : root.url
   }
-
 
 }

@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const storage_1 = require("@google-cloud/storage");
-const dotenv_1 = __importDefault(require("dotenv"));
 const graphql_upload_1 = require("graphql-upload");
-const path_1 = __importDefault(require("path"));
 require("reflect-metadata");
+const dotenv_1 = __importDefault(require("dotenv"));
+const constants_1 = require("./constants");
 const indexImports_1 = require("./indexImports");
+const storage_1 = require("@google-cloud/storage");
+const path_1 = __importDefault(require("path"));
 const PORT = process.env.PORT || 4000;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const isTestMode = !!process.env.TEST_DB;
@@ -38,9 +39,11 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         credentials: true,
     }));
     dotenv_1.default.config();
-    const gc = new storage_1.Storage({ keyFilename: path_1.default.join(__dirname, '../gignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.jsongignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.json'), projectId: "gignal-92ee9" });
-    const gignalBucket = gc.bucket('gignal-92ee9.appspot.com');
-    app.use("/graphql", graphql_upload_1.graphqlUploadExpress({ maxFiles: 10 }));
+    const keyFilename = path_1.default.join(__dirname, '../gignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.json');
+    console.log(keyFilename);
+    const gc = new storage_1.Storage({ keyFilename, projectId: "gignal-92ee9" });
+    gc.getBuckets().then(x => console.log(x));
+    app.use("/graphql", graphql_upload_1.graphqlUploadExpress({ maxFileSize: constants_1.MAX_FILE_SIZE, maxFiles: 10 }));
     app.use('/files', indexImports_1.express.static('files'));
     const sessionMiddleware = indexImports_1.session({
         name: indexImports_1.COOKIE_NAME,
@@ -77,7 +80,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             res,
             redis,
             connection,
-            bucket: gignalBucket
         }),
         uploads: false,
         subscriptions: {

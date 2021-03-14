@@ -27,9 +27,15 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageResolver = void 0;
+const fs_1 = require("fs");
 const graphql_subscriptions_1 = require("graphql-subscriptions");
+const os_1 = __importDefault(require("os"));
+const path_1 = __importDefault(require("path"));
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const uuid_1 = require("uuid");
@@ -41,6 +47,7 @@ const permissions_1 = require("../permissions");
 const CreateMessageInput_1 = require("../types/Input/CreateMessageInput");
 const CreateMessageResponse_1 = require("../types/Response/CreateMessageResponse");
 const pubsub_1 = require("../utils/pubsub");
+const cloudAdmin_1 = __importDefault(require("../utils/cloudAdmin"));
 let MessageResolver = class MessageResolver {
     messages(channelId) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -54,7 +61,7 @@ let MessageResolver = class MessageResolver {
       `, [channelId]);
         });
     }
-    createMessage(input, { req, bucket }) {
+    createMessage(input, { req }) {
         var e_1, _a;
         return __awaiter(this, void 0, void 0, function* () {
             let url = null;
@@ -90,13 +97,20 @@ let MessageResolver = class MessageResolver {
                 fileType = mimetype;
                 const splittedFileType = filename.split('.');
                 url = `${uuid_1.v4()}.${splittedFileType[splittedFileType.length - 1]}`;
-                const test = yield new Promise(res => createReadStream()
-                    .pipe(bucket.file(url).createWriteStream({
+                const filePath = path_1.default.join(os_1.default.tmpdir(), url);
+                createReadStream().pipe(fs_1.createWriteStream(path_1.default.join(__dirname, `../../files/${url}`)));
+                const result = yield cloudAdmin_1.default
+                    .storage()
+                    .bucket()
+                    .upload(filePath, {
                     resumable: false,
-                    gzip: true
-                }))
-                    .on("finish", res));
-                console.log('test', test);
+                    metadata: {
+                        metadata: {
+                            contentType: fileType,
+                        },
+                    },
+                });
+                console.log('result here', result);
             }
             const message = yield Message_1.Message.create({
                 text,
@@ -122,7 +136,7 @@ let MessageResolver = class MessageResolver {
         return root.newMessageAdded;
     }
     url(root) {
-        return root.url ? `https://firebasestorage.googleapis.com/v0/b/${process.env.GOOGLE_STORAGE_PROJECT_NAME}/o/${root.url}?alt=media` : root.url;
+        return root.url ? `http://localhost:4000/files/${root.url}` : root.url;
     }
 };
 __decorate([
