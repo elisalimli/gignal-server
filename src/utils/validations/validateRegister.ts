@@ -1,7 +1,7 @@
 import { RegisterInput } from "../../types/Input/RegisterInput";
 
 export const validateRegister = (options: RegisterInput) => {
-  var errors: any[] = [];
+  const errors: any[] = [];
   if (options.username.length <= 2) {
     errors.push({
       field: "username",
@@ -34,7 +34,6 @@ export const validateRegister = (options: RegisterInput) => {
   }
   if (errors.length > 0) {
     return errors;
-  } else {
-    return null;
   }
+  return null;
 };

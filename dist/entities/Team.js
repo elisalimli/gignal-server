@@ -15,6 +15,7 @@ const typeorm_1 = require("typeorm");
 const User_1 = require("./User");
 const Channel_1 = require("./Channel");
 const Member_1 = require("./Member");
+const PrivateChannelMember_1 = require("./PrivateChannelMember");
 let Team = class Team extends typeorm_1.BaseEntity {
 };
 __decorate([
@@ -27,6 +28,11 @@ __decorate([
     typeorm_1.Column({ type: "varchar", unique: true }),
     __metadata("design:type", String)
 ], Team.prototype, "name", void 0);
+__decorate([
+    type_graphql_1.Field(() => Boolean),
+    typeorm_1.Column({ type: "boolean" }),
+    __metadata("design:type", Boolean)
+], Team.prototype, "admin", void 0);
 __decorate([
     typeorm_1.ManyToOne(() => User_1.User, (user) => user.teams),
     __metadata("design:type", User_1.User)
@@ -45,6 +51,10 @@ __decorate([
     typeorm_1.OneToMany(() => Member_1.Member, (member) => member.team, { cascade: true }),
     __metadata("design:type", Array)
 ], Team.prototype, "members", void 0);
+__decorate([
+    typeorm_1.OneToMany(() => PrivateChannelMember_1.PrivateChannelMember, (pcMember) => pcMember.team, { cascade: true }),
+    __metadata("design:type", Array)
+], Team.prototype, "privateChannelMembers", void 0);
 __decorate([
     type_graphql_1.Field(() => [User_1.User]),
     __metadata("design:type", Array)

@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { graphqlUploadExpress } from "graphql-upload";
 import path from 'path';
 import "reflect-metadata";
-import { MAX_FILE_SIZE } from "./constants";
+import { PrivateChannelMember } from './entities/PrivateChannelMember';
 import {
   ApolloServer,
   buildSchema,
@@ -43,7 +43,7 @@ const main = async () => {
     logging: !isTestMode,
     synchronize: !isTestMode,
 
-    entities: [User, Message, Team, Channel, Member, DirectMessage],
+    entities: [User, Message, Team, Channel, Member, DirectMessage, PrivateChannelMember],
   });
 
   const app = express();
@@ -69,7 +69,7 @@ const main = async () => {
     graphqlUploadExpress({ maxFiles: 10 })
   );
 
-  app.use('/files', express.static('files'))
+  // app.use('/files', express.static('files'))
 
   const sessionMiddleware = session({
     name: COOKIE_NAME,
@@ -134,10 +134,10 @@ const main = async () => {
 
   apolloServer.installSubscriptionHandlers(httpServer);
   //a
-  httpServer.listen(process.env.PORT, () => {
-    console.log(`server listening on port ${process.env.PORT}`);
+  httpServer.listen(PORT, () => {
+    console.log(`server listening on port ${PORT}`);
     console.log(
-      `Subscriptions ready at ws://localhost:${process.env.PORT}${apolloServer.subscriptionsPath}`
+      `Subscriptions ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`
     );
   });
 };

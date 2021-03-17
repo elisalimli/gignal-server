@@ -59,15 +59,13 @@ export class TeamResolver {
     return true;
   }
 
-  @FieldResolver(() => Boolean)
-  async admin(@Ctx() { req }: MyContext, @Root() root: Team) {
-    return req.session.userId === root.creatorId;
-  }
+
 
   @Query(() => Team, { nullable: true })
   @UseMiddleware(isAuth)
   async team(
     @Arg("teamId", () => Int) teamId: number
+    @Ctx() { req }: MyContext
   ): Promise<Team | undefined> {
     //array_to_json(array_agg(c.*))
     //      select t.*,json_build_object('id',cr.id,'username',cr.username) creator,json_build_object('id',c.id,'name',c.name,'teamId',c."teamId") channels from team t left join member m on m."teamId" = t.id
@@ -82,23 +80,9 @@ export class TeamResolver {
     //  left join public.user u on u.id = m."userId"
     //  join public.user cr on cr.id = t."creatorId"
     //  left join channel c on c."teamId" = 41 where t.id = 41
-    //  group by t.id,cr.id,m.id
+    //  group by t.id,cr.id,m.id sad
 
-    const res = (
-      await getConnection().query(
-        `
-       select t.*,
-       array_agg(json_build_object('id',c.id,'name',c.name,'teamId',c."teamId")) channels
-       from team t 
-       left join channel c on c."teamId" = $1 where t.id = $1
-       group by t.id
-       limit 1
-
-      `,
-        [teamId]
-      )
-    )[0];
-    return res;
+    return Team.findOne(teamId);
   }
 
   @FieldResolver(() => [Member], { nullable: true })
@@ -106,8 +90,8 @@ export class TeamResolver {
   async directMessagesMembers(@Root() root: Team, @Ctx() { req }: MyContext) {
     return getConnection().query(
       `
-       select distinct on (u.id) u.id,u.username  from direct_message
-        dm join "user" u on (dm."receiverId" = u.id) or 
+       select distinct on (u.id) u.id,u.username from direct_message dm
+        join "user" u on (dm."receiverId" = u.id) or 
        (dm."senderId" = u.id)  where (dm."receiverId" = $1 or dm."senderId" = $1)
         and dm."teamId" = $2 and u.id != $1 
        
@@ -116,21 +100,21 @@ export class TeamResolver {
     );
   }
 
-  // @FieldResolver(() => Member, { nullable: true })
-  // async members(@Root() root: Team) {
-  //   const member = await Member.findOne({ where: { teamId: root.id } });
-  //   const user = await User.findOne(member?.userId);
-  //   // console.log('ex',user)
-  //   member?.member = user;
-  //   return member;
-  // }
 
-  // @FieldResolver(() => User, { nullable: true })
-  // async member(@Root() root: Member) {
-  //   const abc = await User.findOne(root.userId);
-  //   console.log("heaj", abc);
-  //   return "abc";
-  // }
+
+  @FieldResolver(() => [Channel], { nullable: true })
+  @UseMiddleware(isAuth)
+  async channels(@Root() root: Team, @Ctx() { req }: MyContext) {
+    return getConnection().query(
+      `
+      select distinct on (c.id) c.* from channel c 
+      left join private_channel_member pcm on pcm."userId" = $2
+      where c."teamId" = $1 and (c.public = true or c.id = pcm."channelId")
+       `,
+      [root.id, req.session.userId]
+    );
+  }
+
 
   @Mutation(() => CreateTeamResponse)
   @UseMiddleware(isAuth)
@@ -164,6 +148,7 @@ export class TeamResolver {
           .values({
             name,
             creatorId: userId,
+            admin: true
           })
           .returning("*")
           .execute();
@@ -211,6 +196,11 @@ export class TeamResolver {
         ],
       };
     }
+  }
+
+  @FieldResolver(() => Boolean)
+  admin(@Root() root: Team, @Ctx() { req }: MyContext) {
+    return root.creatorId === req.session.userId
   }
 
   @Query(() => [Member])

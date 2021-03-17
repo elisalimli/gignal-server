@@ -17,6 +17,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const graphql_upload_1 = require("graphql-upload");
 const path_1 = __importDefault(require("path"));
 require("reflect-metadata");
+const PrivateChannelMember_1 = require("./entities/PrivateChannelMember");
 const indexImports_1 = require("./indexImports");
 const PORT = process.env.PORT || 4000;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -28,7 +29,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         password: "postgres",
         logging: !isTestMode,
         synchronize: !isTestMode,
-        entities: [indexImports_1.User, indexImports_1.Message, indexImports_1.Team, indexImports_1.Channel, indexImports_1.Member, indexImports_1.DirectMessage],
+        entities: [indexImports_1.User, indexImports_1.Message, indexImports_1.Team, indexImports_1.Channel, indexImports_1.Member, indexImports_1.DirectMessage, PrivateChannelMember_1.PrivateChannelMember],
     });
     const app = indexImports_1.express();
     const RedisStore = indexImports_1.connectRedis(indexImports_1.session);
@@ -41,7 +42,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const gc = new storage_1.Storage({ keyFilename: path_1.default.join(__dirname, '../gignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.jsongignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.json'), projectId: "gignal-92ee9" });
     const gignalBucket = gc.bucket('gignal-92ee9.appspot.com');
     app.use("/graphql", graphql_upload_1.graphqlUploadExpress({ maxFiles: 10 }));
-    app.use('/files', indexImports_1.express.static('files'));
     const sessionMiddleware = indexImports_1.session({
         name: indexImports_1.COOKIE_NAME,
         store: new RedisStore({
@@ -95,9 +95,9 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     const httpServer = indexImports_1.createServer(app);
     apolloServer.installSubscriptionHandlers(httpServer);
-    httpServer.listen(process.env.PORT, () => {
-        console.log(`server listening on port ${process.env.PORT}`);
-        console.log(`Subscriptions ready at ws://localhost:${process.env.PORT}${apolloServer.subscriptionsPath}`);
+    httpServer.listen(PORT, () => {
+        console.log(`server listening on port ${PORT}`);
+        console.log(`Subscriptions ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
     });
 });
 main().catch((err) => {

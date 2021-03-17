@@ -9,28 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateChannelInput = void 0;
+exports.PrivateChannelMemberInput = void 0;
 const type_graphql_1 = require("type-graphql");
-let CreateChannelInput = class CreateChannelInput {
+let PrivateChannelMemberInput = class PrivateChannelMemberInput {
 };
 __decorate([
     type_graphql_1.Field(() => type_graphql_1.Int),
     __metadata("design:type", Number)
-], CreateChannelInput.prototype, "teamId", void 0);
+], PrivateChannelMemberInput.prototype, "id", void 0);
 __decorate([
-    type_graphql_1.Field(),
-    __metadata("design:type", String)
-], CreateChannelInput.prototype, "name", void 0);
-__decorate([
-    type_graphql_1.Field(() => Boolean),
-    __metadata("design:type", Boolean)
-], CreateChannelInput.prototype, "isPublic", void 0);
-__decorate([
-    type_graphql_1.Field(() => [type_graphql_1.Int]),
-    __metadata("design:type", Array)
-], CreateChannelInput.prototype, "members", void 0);
-CreateChannelInput = __decorate([
+    type_graphql_1.Field(() => type_graphql_1.Int),
+    __metadata("design:type", Number)
+], PrivateChannelMemberInput.prototype, "channelId", void 0);
+PrivateChannelMemberInput = __decorate([
     type_graphql_1.InputType()
-], CreateChannelInput);
-exports.CreateChannelInput = CreateChannelInput;
-//# sourceMappingURL=CreateChannelInput.js.map
+], PrivateChannelMemberInput);
+exports.PrivateChannelMemberInput = PrivateChannelMemberInput;
+//# sourceMappingURL=PrivateChannelMemberInput.js.map

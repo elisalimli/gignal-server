@@ -135,12 +135,9 @@ export class UserResolver {
           username: options.username,
           email: options.email,
           password: hashedPassword,
-          // imageURL:
-          //   "https://res.cloudinary.com/dvzql12lb/image/upload/v1612874862/download_nh0l3g-c_scale_h_56_otnzwk.png",
         })
         .returning("*")
         .execute();
-
       // eslint-disable-next-line prefer-destructuring
       user = result.raw[0];
     } catch (err: any) {

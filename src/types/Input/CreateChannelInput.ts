@@ -8,6 +8,9 @@ export class CreateChannelInput {
   @Field()
   name: string;
 
-  @Field(() => Boolean, { nullable: true })
+  @Field(() => Boolean)
   isPublic: boolean;
+
+  @Field(() => [Int])
+  members: number[]
 }

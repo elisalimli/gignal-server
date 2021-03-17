@@ -51,34 +51,29 @@ let TeamResolver = class TeamResolver {
             return true;
         });
     }
-    admin({ req }, root) {
+    team(teamId, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return req.session.userId === root.creatorId;
-        });
-    }
-    team(teamId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const res = (yield typeorm_1.getConnection().query(`
-       select t.*,
-       array_agg(json_build_object('id',c.id,'name',c.name,'teamId',c."teamId")) channels
-       from team t 
-       left join channel c on c."teamId" = $1 where t.id = $1
-       group by t.id
-       limit 1
-
-      `, [teamId]))[0];
-            return res;
+            return Team_1.Team.findOne(teamId);
         });
     }
     directMessagesMembers(root, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             return typeorm_1.getConnection().query(`
-       select distinct on (u.id) u.id,u.username  from direct_message
-        dm join "user" u on (dm."receiverId" = u.id) or 
+       select distinct on (u.id) u.id,u.username from direct_message dm
+        join "user" u on (dm."receiverId" = u.id) or 
        (dm."senderId" = u.id)  where (dm."receiverId" = $1 or dm."senderId" = $1)
         and dm."teamId" = $2 and u.id != $1 
        
       `, [req.session.userId, root.id]);
+        });
+    }
+    channels(root, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return typeorm_1.getConnection().query(`
+      select distinct on (c.id) c.* from channel c 
+      left join private_channel_member pcm on pcm."userId" = $2
+      where c."teamId" = $1 and (c.public = true or c.id = pcm."channelId")
+       `, [root.id, req.session.userId]);
         });
     }
     createTeam(name, { req: { session: { userId }, }, }) {
@@ -103,6 +98,7 @@ let TeamResolver = class TeamResolver {
                         .values({
                         name,
                         creatorId: userId,
+                        admin: true
                     })
                         .returning("*")
                         .execute();
@@ -148,6 +144,9 @@ let TeamResolver = class TeamResolver {
             }
         });
     }
+    admin(root, { req }) {
+        return root.creatorId === req.session.userId;
+    }
     getTeamMembers(teamId, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("get team members");
@@ -181,18 +180,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TeamResolver.prototype, "deleteTeam", null);
 __decorate([
-    type_graphql_1.FieldResolver(() => Boolean),
-    __param(0, type_graphql_1.Ctx()), __param(1, type_graphql_1.Root()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Team_1.Team]),
-    __metadata("design:returntype", Promise)
-], TeamResolver.prototype, "admin", null);
-__decorate([
     type_graphql_1.Query(() => Team_1.Team, { nullable: true }),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
     __param(0, type_graphql_1.Arg("teamId", () => type_graphql_1.Int)),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], TeamResolver.prototype, "team", null);
 __decorate([
@@ -204,6 +197,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TeamResolver.prototype, "directMessagesMembers", null);
 __decorate([
+    type_graphql_1.FieldResolver(() => [Channel_1.Channel], { nullable: true }),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Team_1.Team, Object]),
+    __metadata("design:returntype", Promise)
+], TeamResolver.prototype, "channels", null);
+__decorate([
     type_graphql_1.Mutation(() => CreateTeamResponse_1.CreateTeamResponse),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
     __param(0, type_graphql_1.Arg("name")),
@@ -212,6 +213,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], TeamResolver.prototype, "createTeam", null);
+__decorate([
+    type_graphql_1.FieldResolver(() => Boolean),
+    __param(0, type_graphql_1.Root()), __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Team_1.Team, Object]),
+    __metadata("design:returntype", void 0)
+], TeamResolver.prototype, "admin", null);
 __decorate([
     type_graphql_1.Query(() => [Member_1.Member]),
     __param(0, type_graphql_1.Arg("teamId", () => type_graphql_1.Int)),

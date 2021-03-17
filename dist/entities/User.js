@@ -15,6 +15,7 @@ const typeorm_1 = require("typeorm");
 const Team_1 = require("./Team");
 const Message_1 = require("./Message");
 const Channel_1 = require("./Channel");
+const PrivateChannelMember_1 = require("./PrivateChannelMember");
 const DirectMessage_1 = require("./DirectMessage");
 const Member_1 = require("./Member");
 let User = class User extends typeorm_1.BaseEntity {
@@ -58,6 +59,10 @@ __decorate([
     typeorm_1.OneToMany(() => Member_1.Member, (member) => member.user),
     __metadata("design:type", Array)
 ], User.prototype, "members", void 0);
+__decorate([
+    typeorm_1.OneToMany(() => PrivateChannelMember_1.PrivateChannelMember, (pcMember) => pcMember.user),
+    __metadata("design:type", Array)
+], User.prototype, "privateChannelMembers", void 0);
 __decorate([
     type_graphql_1.Field(() => Boolean),
     __metadata("design:type", Boolean)

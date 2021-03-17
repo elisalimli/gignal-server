@@ -12,6 +12,7 @@ import { Team } from "./Team";
 import { Message } from "./Message";
 import { Channel } from "./Channel";
 // import { Member } from "./Member";
+import { PrivateChannelMember } from './PrivateChannelMember';
 import { DirectMessage } from "./DirectMessage";
 import { Member } from "./Member";
 
@@ -49,8 +50,8 @@ export class User extends BaseEntity {
   @OneToMany(() => Member, (member) => member.user)
   members: Member[];
 
-  // @OneToMany(() => Member, (member) => member.member)
-  // members: Member[];
+  @OneToMany(() => PrivateChannelMember, (pcMember) => pcMember.user)
+  privateChannelMembers: PrivateChannelMember[];
 
   @Field(() => Boolean)
   isYou: boolean;

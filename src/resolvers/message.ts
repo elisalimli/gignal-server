@@ -1,9 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable arrow-body-style */
-import { createWriteStream } from "fs";
 import { withFilter } from "graphql-subscriptions";
-import os from 'os';
-import path from 'path';
 import {
   Arg,
   Ctx,
@@ -27,7 +24,8 @@ import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
 import { CreateMessageResponse } from '../types/Response/CreateMessageResponse';
 import { pubsub } from "../utils/pubsub";
-import admin from '../utils/cloudAdmin';
+import { Channel } from '../entities/Channel';
+import { PrivateChannelMember } from '../entities/PrivateChannelMember';
 
 
 @Resolver(Message)
@@ -35,8 +33,17 @@ export class MessageResolver {
   @Query(() => [Message], { nullable: true })
   @UseMiddleware(isAuth)
   async messages(
-    @Arg("channelId", () => Int) channelId: number
+    @Arg("channelId", () => Int) channelId: number,
+    @Ctx() { req }: MyContext
   ): Promise<Message[] | null> {
+    const channel = await Channel.findOne(channelId);
+    if (!channel?.public) {
+      const member = await PrivateChannelMember.findOne({ where: { userId: req.session.userId } })
+      if (!member) {
+        throw new Error('This channel is private,you must part of the channel.')
+      }
+    }
+
     return getConnection().query(
       `
       select m.*,
@@ -45,9 +52,10 @@ export class MessageResolver {
       m join public.user u on u.id = m."creatorId"
       where "channelId" = $1 
       order by "createdAt" ASC
-      `,
+  `,
       [channelId]
     );
+
   }
 
   @Mutation(() => CreateMessageResponse)

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateRegister = void 0;
 const validateRegister = (options) => {
-    var errors = [];
+    const errors = [];
     if (options.username.length <= 2) {
         errors.push({
             field: "username",
@@ -36,9 +36,7 @@ const validateRegister = (options) => {
     if (errors.length > 0) {
         return errors;
     }
-    else {
-        return null;
-    }
+    return null;
 };
 exports.validateRegister = validateRegister;
 //# sourceMappingURL=validateRegister.js.map

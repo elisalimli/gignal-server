@@ -25,6 +25,7 @@ exports.ChannelResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Channel_1 = require("../entities/Channel");
+const PrivateChannelMember_1 = require("../entities/PrivateChannelMember");
 const isAuth_1 = require("../middlewares/isAuth");
 const ChannelInput_1 = require("../types/Input/ChannelInput");
 const CreateChannelInput_1 = require("../types/Input/CreateChannelInput");
@@ -34,6 +35,11 @@ let ChannelResolver = class ChannelResolver {
         return __awaiter(this, void 0, void 0, function* () {
             const { channelId: id, teamId } = input;
             const channel = yield Channel_1.Channel.findOne({ where: { id, teamId } });
+            console.log('channel');
+            console.log('channel', channel);
+            console.log('channel', channel);
+            console.log('channel', channel);
+            console.log('channel');
             if (!channel)
                 return null;
             return channel;
@@ -42,10 +48,11 @@ let ChannelResolver = class ChannelResolver {
     createChannel(input, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = [];
+            const { userId } = req.session;
             const team = (yield typeorm_1.getConnection().query(`
-  select "creatorId" from team where id = $1
-  `, [input.teamId]))[0];
-            if ((team === null || team === void 0 ? void 0 : team.creatorId) !== req.session.userId) {
+        select admin from team where id = $1
+        `, [userId]))[0];
+            if (!team.admin) {
                 return {
                     errors: [{ field: "name", message: "You aren't owner of team" }],
                 };
@@ -56,21 +63,36 @@ let ChannelResolver = class ChannelResolver {
                     message: "Channel name must be greater than 2",
                 });
             }
-            console.log(!!errors);
             if (errors.length > 0)
                 return { errors };
-            const { name, teamId, isPublic } = input;
+            const { name, teamId, isPublic, members } = input;
             try {
-                const channel = yield Channel_1.Channel.create({
-                    creatorId: req.session.userId,
-                    name,
-                    public: isPublic,
-                    teamId,
-                }).save();
-                console.log("channel");
-                return {
-                    channel,
-                };
+                const res = yield typeorm_1.getManager().transaction(() => __awaiter(this, void 0, void 0, function* () {
+                    const channel = yield Channel_1.Channel.create({
+                        creatorId: userId,
+                        name,
+                        public: isPublic,
+                        teamId,
+                    }).save();
+                    const newMembers = [];
+                    if (!isPublic) {
+                        const filteredMembers = members.filter(uid => uid !== userId);
+                        filteredMembers.push(userId);
+                        filteredMembers.forEach(uid => {
+                            const admin = req.session.userId === uid ? true : false;
+                            console.log("admin", admin);
+                            newMembers.push({ userId: uid, channelId: channel.id, admin });
+                        });
+                        yield typeorm_1.getConnection()
+                            .createQueryBuilder()
+                            .insert()
+                            .into(PrivateChannelMember_1.PrivateChannelMember)
+                            .values(newMembers)
+                            .execute();
+                    }
+                    return { channel };
+                }));
+                return res;
             }
             catch (err) {
                 console.log("err", err);

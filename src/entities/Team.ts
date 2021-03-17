@@ -12,6 +12,7 @@ import {
 import { User } from "./User";
 import { Channel } from "./Channel";
 import { Member } from "./Member";
+import { PrivateChannelMember } from './PrivateChannelMember';
 
 @ObjectType()
 @Entity()
@@ -23,6 +24,10 @@ export class Team extends BaseEntity {
   @Field(() => String)
   @Column({ type: "varchar", unique: true })
   name!: string;
+
+  @Field(() => Boolean)
+  @Column({ type: "boolean" })
+  admin!: boolean;
 
   @ManyToOne(() => User, (user) => user.teams)
   creator!: User;
@@ -37,6 +42,9 @@ export class Team extends BaseEntity {
 
   @OneToMany(() => Member, (member) => member.team, { cascade: true })
   members: Member[];
+
+  @OneToMany(() => PrivateChannelMember, (pcMember) => pcMember.team, { cascade: true })
+  privateChannelMembers: PrivateChannelMember[];
 
   @Field(() => [User])
   directMessagesMembers: User[];
