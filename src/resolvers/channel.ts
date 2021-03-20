@@ -170,7 +170,12 @@ export class ChannelResolver {
           `
         );
 
-        const name = users.map((u: User) => u.username).join(",");
+        let name;
+
+        if (filteredMembers.length > 1)
+          name = users.map((u: User) => u.username).join(",");
+        else name = users[0].username;
+
         const channel = await Channel.create({
           creatorId: userId,
           name,

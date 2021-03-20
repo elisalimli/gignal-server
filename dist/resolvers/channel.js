@@ -147,7 +147,11 @@ let ChannelResolver = class ChannelResolver {
                     const users = yield typeorm_1.getConnection().query(`
           select username from public.user where id in (${allMembers})
           `);
-                    const name = users.map((u) => u.username).join(",");
+                    let name;
+                    if (filteredMembers.length > 1)
+                        name = users.map((u) => u.username).join(",");
+                    else
+                        name = users[0].username;
                     const channel = yield Channel_1.Channel.create({
                         creatorId: userId,
                         name,

@@ -1,10 +1,10 @@
 /* eslint-disable no-new */
-import { Storage } from '@google-cloud/storage';
-import dotenv from 'dotenv';
+import { Storage } from "@google-cloud/storage";
+import dotenv from "dotenv";
 import { graphqlUploadExpress } from "graphql-upload";
-import path from 'path';
+import path from "path";
 import "reflect-metadata";
-import { PrivateChannelMember } from './entities/PrivateChannelMember';
+import { PrivateChannelMember } from "./entities/PrivateChannelMember";
 import {
   ApolloServer,
   buildSchema,
@@ -13,7 +13,8 @@ import {
   connectRedis,
   COOKIE_NAME,
   cors,
-  createConnection, createServer,
+  createConnection,
+  createServer,
   DirectMessage,
   DirectMessageResolver,
   express,
@@ -27,7 +28,7 @@ import {
   Team,
   TeamResolver,
   User,
-  UserResolver
+  UserResolver,
 } from "./indexImports";
 import { MyContext } from "./types/MyContext";
 
@@ -43,11 +44,18 @@ const main = async () => {
     logging: !isTestMode,
     synchronize: !isTestMode,
 
-    entities: [User, Message, Team, Channel, Member, DirectMessage, PrivateChannelMember],
+    entities: [
+      User,
+      Message,
+      Team,
+      Channel,
+      Member,
+      DirectMessage,
+      PrivateChannelMember,
+    ],
   });
 
   const app = express();
-
   const RedisStore = connectRedis(session);
   const redis = new Redis();
 
@@ -59,15 +67,18 @@ const main = async () => {
     })
   );
 
-  dotenv.config()
+  dotenv.config();
 
-  const gc = new Storage({ keyFilename: path.join(__dirname, '../gignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.jsongignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.json'), projectId: "gignal-92ee9" })
-  const gignalBucket = gc.bucket('gignal-92ee9.appspot.com')
+  const gc = new Storage({
+    keyFilename: path.join(
+      __dirname,
+      "../gignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.jsongignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.json"
+    ),
+    projectId: "gignal-92ee9",
+  });
+  const gignalBucket = gc.bucket("gignal-92ee9.appspot.com");
 
-  app.use(
-    "/graphql",
-    graphqlUploadExpress({ maxFiles: 10 })
-  );
+  app.use("/graphql", graphqlUploadExpress({ maxFiles: 10 }));
 
   // app.use('/files', express.static('files'))
 
@@ -109,10 +120,8 @@ const main = async () => {
       res,
       redis,
       connection,
-      bucket: gignalBucket
-
+      bucket: gignalBucket,
     }),
-    // uploads: { maxFileSize: 10000000, maxFiles: 10 },
     uploads: false,
 
     subscriptions: {
