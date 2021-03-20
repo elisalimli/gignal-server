@@ -25,21 +25,19 @@ exports.ChannelResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Channel_1 = require("../entities/Channel");
+const Member_1 = require("../entities/Member");
 const PrivateChannelMember_1 = require("../entities/PrivateChannelMember");
 const isAuth_1 = require("../middlewares/isAuth");
 const ChannelInput_1 = require("../types/Input/ChannelInput");
 const CreateChannelInput_1 = require("../types/Input/CreateChannelInput");
+const GetOrCreateChannelInput_1 = require("../types/Input/GetOrCreateChannelInput");
 const CreateChannelResponse_1 = require("../types/Response/CreateChannelResponse");
+const GetOrCreateChannelResponse_1 = require("../types/Response/GetOrCreateChannelResponse");
 let ChannelResolver = class ChannelResolver {
     channel(input) {
         return __awaiter(this, void 0, void 0, function* () {
             const { channelId: id, teamId } = input;
             const channel = yield Channel_1.Channel.findOne({ where: { id, teamId } });
-            console.log('channel');
-            console.log('channel', channel);
-            console.log('channel', channel);
-            console.log('channel', channel);
-            console.log('channel');
             if (!channel)
                 return null;
             return channel;
@@ -76,10 +74,10 @@ let ChannelResolver = class ChannelResolver {
                     }).save();
                     const newMembers = [];
                     if (!isPublic) {
-                        const filteredMembers = members.filter(uid => uid !== userId);
+                        const filteredMembers = members.filter((uid) => uid !== userId);
                         filteredMembers.push(userId);
-                        filteredMembers.forEach(uid => {
-                            const admin = req.session.userId === uid ? true : false;
+                        filteredMembers.forEach((uid) => {
+                            const admin = req.session.userId === uid;
                             console.log("admin", admin);
                             newMembers.push({ userId: uid, channelId: channel.id, admin });
                         });
@@ -91,6 +89,90 @@ let ChannelResolver = class ChannelResolver {
                             .execute();
                     }
                     return { channel };
+                }));
+                return res;
+            }
+            catch (err) {
+                console.log("err", err);
+                return {
+                    errors: [{ field: "general", message: "An error occured" }],
+                };
+            }
+        });
+    }
+    getOrCreateChannel(input, { req }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { userId } = req.session;
+            const { members, teamId } = input;
+            if (!members.length) {
+                return {
+                    errors: [
+                        {
+                            field: "members",
+                            message: "You have to select members",
+                        },
+                    ],
+                };
+            }
+            const member = yield Member_1.Member.findOne({ where: { teamId, userId } });
+            if (!member) {
+                throw new Error("Not Authorized");
+            }
+            const filteredMembers = members.filter((uid) => uid !== userId);
+            const allMembers = [...filteredMembers, userId];
+            const [response] = yield typeorm_1.getConnection().query(`
+      select c.id,c.name from channel c
+      left join private_channel_member pcm on pcm."channelId" = c.id 
+     where c.dm = true
+     and c."teamId" = $1 and c.public = false     
+     group by c.id
+     having array_agg(pcm."userId") @> Array[${allMembers.join(",")}]
+     and count(pcm."userId") = $2
+       `, [teamId, allMembers.length]);
+            if (response === null || response === void 0 ? void 0 : response.id) {
+                return {
+                    channel: {
+                        id: response === null || response === void 0 ? void 0 : response.id,
+                    },
+                    errors: [
+                        {
+                            field: "members",
+                            message: "This direct message channel already created before with same users",
+                        },
+                    ],
+                };
+            }
+            try {
+                const res = yield typeorm_1.getManager().transaction(() => __awaiter(this, void 0, void 0, function* () {
+                    const users = yield typeorm_1.getConnection().query(`
+          select username from public.user where id in (${allMembers})
+          `);
+                    const name = users.map((u) => u.username).join(",");
+                    const channel = yield Channel_1.Channel.create({
+                        creatorId: userId,
+                        name,
+                        public: false,
+                        dm: true,
+                        teamId,
+                    }).save();
+                    const newMembers = [];
+                    allMembers.forEach((uid) => {
+                        const admin = userId === uid;
+                        console.log("admin", admin);
+                        newMembers.push({ userId: uid, channelId: channel.id, admin });
+                    });
+                    yield typeorm_1.getConnection()
+                        .createQueryBuilder()
+                        .insert()
+                        .into(PrivateChannelMember_1.PrivateChannelMember)
+                        .values(newMembers)
+                        .execute();
+                    return {
+                        channel: {
+                            id: channel.id,
+                            name: channel.name,
+                        },
+                    };
                 }));
                 return res;
             }
@@ -120,6 +202,15 @@ __decorate([
     __metadata("design:paramtypes", [CreateChannelInput_1.CreateChannelInput, Object]),
     __metadata("design:returntype", Promise)
 ], ChannelResolver.prototype, "createChannel", null);
+__decorate([
+    type_graphql_1.Mutation(() => GetOrCreateChannelResponse_1.GetOrCreateChannelResponse),
+    type_graphql_1.UseMiddleware(isAuth_1.isAuth),
+    __param(0, type_graphql_1.Arg("input")),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [GetOrCreateChannelInput_1.GetOrCreateChannelInput, Object]),
+    __metadata("design:returntype", Promise)
+], ChannelResolver.prototype, "getOrCreateChannel", null);
 ChannelResolver = __decorate([
     type_graphql_1.Resolver(Channel_1.Channel)
 ], ChannelResolver);

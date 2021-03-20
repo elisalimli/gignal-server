@@ -11,22 +11,21 @@ import {
   Resolver,
   Root,
   Subscription,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
-import { v4 } from 'uuid';
-import { MAX_FILE_SIZE, NEW_CHANNEL_MESSAGE } from '../constants';
+import { v4 } from "uuid";
+import { MAX_FILE_SIZE, NEW_CHANNEL_MESSAGE } from "../constants";
 import { Message } from "../entities/Message";
 import { User } from "../entities/User";
 import { isAuth } from "../middlewares/isAuth";
 import { requiresAuth, requiresTeamAccess } from "../permissions";
 import { CreateMessageInput } from "../types/Input/CreateMessageInput";
 import { MyContext } from "../types/MyContext";
-import { CreateMessageResponse } from '../types/Response/CreateMessageResponse';
+import { CreateMessageResponse } from "../types/Response/CreateMessageResponse";
 import { pubsub } from "../utils/pubsub";
-import { Channel } from '../entities/Channel';
-import { PrivateChannelMember } from '../entities/PrivateChannelMember';
-
+import { Channel } from "../entities/Channel";
+import { PrivateChannelMember } from "../entities/PrivateChannelMember";
 
 @Resolver(Message)
 export class MessageResolver {
@@ -38,9 +37,13 @@ export class MessageResolver {
   ): Promise<Message[] | null> {
     const channel = await Channel.findOne(channelId);
     if (!channel?.public) {
-      const member = await PrivateChannelMember.findOne({ where: { userId: req.session.userId } })
+      const member = await PrivateChannelMember.findOne({
+        where: { userId: req.session.userId },
+      });
       if (!member) {
-        throw new Error('This channel is private,you must part of the channel.')
+        throw new Error(
+          "This channel is private,you must part of the channel."
+        );
       }
     }
 
@@ -55,7 +58,6 @@ export class MessageResolver {
   `,
       [channelId]
     );
-
   }
 
   @Mutation(() => CreateMessageResponse)
@@ -79,28 +81,29 @@ export class MessageResolver {
         return {
           errors: [
             {
-              field: 'size',
-              message: `File size must be less than ${MAX_FILE_SIZE / 1000000}MB`
-            }
-          ]
-        }
+              field: "size",
+              message: `File size must be less than ${
+                MAX_FILE_SIZE / 1000000
+              }MB`,
+            },
+          ],
+        };
       }
 
       fileType = mimetype;
-      const splittedFileType = filename.split('.')
-      url = `${v4()}.${splittedFileType[splittedFileType.length - 1]}`
+      const splittedFileType = filename.split(".");
+      url = `${v4()}.${splittedFileType[splittedFileType.length - 1]}`;
 
-      const test = await new Promise(res =>
+      await new Promise((res) =>
         createReadStream()
           .pipe(
             bucket.file(url).createWriteStream({
               resumable: false,
-              gzip: true
+              gzip: true,
             })
           )
           .on("finish", res)
       );
-      console.log('test', test)
     }
 
     const message = await Message.create({
@@ -124,7 +127,7 @@ export class MessageResolver {
     };
     asyncFo();
     return {
-      message
+      message,
     };
   }
 
@@ -153,7 +156,8 @@ export class MessageResolver {
 
   @FieldResolver(() => String, { nullable: true })
   url(@Root() root: Message) {
-    return root.url ? `https://firebasestorage.googleapis.com/v0/b/${process.env.GOOGLE_STORAGE_PROJECT_NAME}/o/${root.url}?alt=media` : root.url
+    return root.url
+      ? `https://firebasestorage.googleapis.com/v0/b/${process.env.GOOGLE_STORAGE_PROJECT_NAME}/o/${root.url}?alt=media`
+      : root.url;
   }
-
 }

@@ -33,6 +33,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Channel.prototype, "public", void 0);
 __decorate([
+    type_graphql_1.Field(() => Boolean),
+    typeorm_1.Column({ type: "boolean", default: false }),
+    __metadata("design:type", Boolean)
+], Channel.prototype, "dm", void 0);
+__decorate([
     type_graphql_1.Field(() => [User_1.User], { nullable: true }),
     typeorm_1.OneToMany(() => User_1.User, (user) => user.channels),
     __metadata("design:type", Array)

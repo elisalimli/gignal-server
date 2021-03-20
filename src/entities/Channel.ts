@@ -28,6 +28,11 @@ export class Channel extends BaseEntity {
   @Column({ type: "boolean", default: true })
   public: boolean;
 
+  //dm => direct message channel 
+  @Field(() => Boolean)
+  @Column({ type: "boolean", default: false })
+  dm: boolean;
+
   @Field(() => [User], { nullable: true })
   @OneToMany(() => User, (user) => user.channels)
   users: User[];

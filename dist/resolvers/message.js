@@ -48,9 +48,11 @@ let MessageResolver = class MessageResolver {
         return __awaiter(this, void 0, void 0, function* () {
             const channel = yield Channel_1.Channel.findOne(channelId);
             if (!(channel === null || channel === void 0 ? void 0 : channel.public)) {
-                const member = yield PrivateChannelMember_1.PrivateChannelMember.findOne({ where: { userId: req.session.userId } });
+                const member = yield PrivateChannelMember_1.PrivateChannelMember.findOne({
+                    where: { userId: req.session.userId },
+                });
                 if (!member) {
-                    throw new Error('This channel is private,you must part of the channel.');
+                    throw new Error("This channel is private,you must part of the channel.");
                 }
             }
             return typeorm_1.getConnection().query(`
@@ -90,22 +92,21 @@ let MessageResolver = class MessageResolver {
                     return {
                         errors: [
                             {
-                                field: 'size',
-                                message: `File size must be less than ${constants_1.MAX_FILE_SIZE / 1000000}MB`
-                            }
-                        ]
+                                field: "size",
+                                message: `File size must be less than ${constants_1.MAX_FILE_SIZE / 1000000}MB`,
+                            },
+                        ],
                     };
                 }
                 fileType = mimetype;
-                const splittedFileType = filename.split('.');
+                const splittedFileType = filename.split(".");
                 url = `${uuid_1.v4()}.${splittedFileType[splittedFileType.length - 1]}`;
-                const test = yield new Promise(res => createReadStream()
+                yield new Promise((res) => createReadStream()
                     .pipe(bucket.file(url).createWriteStream({
                     resumable: false,
-                    gzip: true
+                    gzip: true,
                 }))
                     .on("finish", res));
-                console.log('test', test);
             }
             const message = yield Message_1.Message.create({
                 text,
@@ -123,7 +124,7 @@ let MessageResolver = class MessageResolver {
             });
             asyncFo();
             return {
-                message
+                message,
             };
         });
     }
@@ -131,7 +132,9 @@ let MessageResolver = class MessageResolver {
         return root.newMessageAdded;
     }
     url(root) {
-        return root.url ? `https://firebasestorage.googleapis.com/v0/b/${process.env.GOOGLE_STORAGE_PROJECT_NAME}/o/${root.url}?alt=media` : root.url;
+        return root.url
+            ? `https://firebasestorage.googleapis.com/v0/b/${process.env.GOOGLE_STORAGE_PROJECT_NAME}/o/${root.url}?alt=media`
+            : root.url;
     }
 };
 __decorate([

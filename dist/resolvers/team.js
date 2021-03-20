@@ -33,7 +33,7 @@ let TeamResolver = class TeamResolver {
     teams({ req }) {
         return __awaiter(this, void 0, void 0, function* () {
             return typeorm_1.getConnection().query(`
-      select id,name from team where "creatorId" = $1 ;
+      select id,name from team where "creatorId" = $1 order by "createdAt" DESC;
        `, [req.session.userId]);
         });
     }
@@ -41,7 +41,7 @@ let TeamResolver = class TeamResolver {
         return __awaiter(this, void 0, void 0, function* () {
             return typeorm_1.getConnection().query(`
       select t.id,t.name from member m join team t on t.id = m."teamId" 
-      where m."userId" = $1 and t."creatorId" != $1
+      where m."userId" = $1 and t."creatorId" != $1 order by t."createdAt" DESC;
       `, [req.session.userId]);
         });
     }
@@ -51,7 +51,7 @@ let TeamResolver = class TeamResolver {
             return true;
         });
     }
-    team(teamId, { req }) {
+    team(teamId) {
         return __awaiter(this, void 0, void 0, function* () {
             return Team_1.Team.findOne(teamId);
         });
@@ -98,7 +98,7 @@ let TeamResolver = class TeamResolver {
                         .values({
                         name,
                         creatorId: userId,
-                        admin: true
+                        admin: true,
                     })
                         .returning("*")
                         .execute();
@@ -183,9 +183,8 @@ __decorate([
     type_graphql_1.Query(() => Team_1.Team, { nullable: true }),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
     __param(0, type_graphql_1.Arg("teamId", () => type_graphql_1.Int)),
-    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], TeamResolver.prototype, "team", null);
 __decorate([

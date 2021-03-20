@@ -23,13 +23,9 @@ export class TeamResolver {
   @Query(() => [Team], { nullable: true })
   @UseMiddleware(isAuth)
   async teams(@Ctx() { req }: MyContext): Promise<Team[] | null> {
-    // return Team.find({
-    //   where: { creatorId: req.session.userId },
-    // });
-
     return getConnection().query(
       `
-      select id,name from team where "creatorId" = $1 ;
+      select id,name from team where "creatorId" = $1 order by "createdAt" DESC;
        `,
       [req.session.userId]
     );
@@ -40,7 +36,7 @@ export class TeamResolver {
     return getConnection().query(
       `
       select t.id,t.name from member m join team t on t.id = m."teamId" 
-      where m."userId" = $1 and t."creatorId" != $1
+      where m."userId" = $1 and t."creatorId" != $1 order by t."createdAt" DESC;
       `,
       [req.session.userId]
     );
@@ -59,13 +55,10 @@ export class TeamResolver {
     return true;
   }
 
-
-
   @Query(() => Team, { nullable: true })
   @UseMiddleware(isAuth)
   async team(
     @Arg("teamId", () => Int) teamId: number
-    @Ctx() { req }: MyContext
   ): Promise<Team | undefined> {
     //array_to_json(array_agg(c.*))
     //      select t.*,json_build_object('id',cr.id,'username',cr.username) creator,json_build_object('id',c.id,'name',c.name,'teamId',c."teamId") channels from team t left join member m on m."teamId" = t.id
@@ -100,8 +93,6 @@ export class TeamResolver {
     );
   }
 
-
-
   @FieldResolver(() => [Channel], { nullable: true })
   @UseMiddleware(isAuth)
   async channels(@Root() root: Team, @Ctx() { req }: MyContext) {
@@ -114,7 +105,6 @@ export class TeamResolver {
       [root.id, req.session.userId]
     );
   }
-
 
   @Mutation(() => CreateTeamResponse)
   @UseMiddleware(isAuth)
@@ -148,7 +138,7 @@ export class TeamResolver {
           .values({
             name,
             creatorId: userId,
-            admin: true
+            admin: true,
           })
           .returning("*")
           .execute();
@@ -200,7 +190,7 @@ export class TeamResolver {
 
   @FieldResolver(() => Boolean)
   admin(@Root() root: Team, @Ctx() { req }: MyContext) {
-    return root.creatorId === req.session.userId
+    return root.creatorId === req.session.userId;
   }
 
   @Query(() => [Member])

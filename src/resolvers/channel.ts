@@ -1,3 +1,4 @@
+import { User } from "src/entities/User";
 import { PCMember } from "src/types/PrivateChannelMember";
 import {
   Arg,
@@ -5,18 +6,20 @@ import {
   Mutation,
   Query,
   Resolver,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
-import { getConnection, getManager } from 'typeorm';
+import { getConnection, getManager } from "typeorm";
 import { Channel } from "../entities/Channel";
-import { PrivateChannelMember } from '../entities/PrivateChannelMember';
+import { Member } from "../entities/Member";
+import { PrivateChannelMember } from "../entities/PrivateChannelMember";
 import { isAuth } from "../middlewares/isAuth";
 import { FieldError } from "../types/Error/FieldError";
 import { ChannelInput } from "../types/Input/ChannelInput";
 import { CreateChannelInput } from "../types/Input/CreateChannelInput";
-import { MyContext } from '../types/MyContext';
+import { GetOrCreateChannelInput } from "../types/Input/GetOrCreateChannelInput";
+import { MyContext } from "../types/MyContext";
 import { CreateChannelResponse } from "../types/Response/CreateChannelResponse";
-
+import { GetOrCreateChannelResponse } from "../types/Response/GetOrCreateChannelResponse";
 
 @Resolver(Channel)
 export class ChannelResolver {
@@ -25,11 +28,7 @@ export class ChannelResolver {
   async channel(@Arg("input") input: ChannelInput): Promise<Channel | null> {
     const { channelId: id, teamId } = input;
     const channel = await Channel.findOne({ where: { id, teamId } });
-    console.log('channel')
-    console.log('channel', channel)
-    console.log('channel', channel)
-    console.log('channel', channel)
-    console.log('channel')
+
     if (!channel) return null;
 
     return channel;
@@ -51,7 +50,7 @@ export class ChannelResolver {
         `,
         [userId]
       )
-    )[0]
+    )[0];
 
     if (!team.admin) {
       return {
@@ -81,12 +80,12 @@ export class ChannelResolver {
 
         const newMembers: PCMember[] = [];
         if (!isPublic) {
-          const filteredMembers = members.filter(uid => uid !== userId)
-          filteredMembers.push(userId)
-          filteredMembers.forEach(uid => {
-            const admin = req.session.userId === uid ? true : false;
-            console.log("admin", admin)
-            newMembers.push({ userId: uid, channelId: channel.id, admin })
+          const filteredMembers = members.filter((uid) => uid !== userId);
+          filteredMembers.push(userId!);
+          filteredMembers.forEach((uid) => {
+            const admin = req.session.userId === uid;
+            console.log("admin", admin);
+            newMembers.push({ userId: uid, channelId: channel.id, admin });
           });
           await getConnection()
             .createQueryBuilder()
@@ -95,8 +94,112 @@ export class ChannelResolver {
             .values(newMembers)
             .execute();
         }
-        return { channel }
-      })
+        return { channel };
+      });
+
+      return res;
+    } catch (err) {
+      console.log("err", err);
+      return {
+        errors: [{ field: "general", message: "An error occured" }],
+      };
+    }
+  }
+
+  @Mutation(() => GetOrCreateChannelResponse)
+  @UseMiddleware(isAuth)
+  async getOrCreateChannel(
+    @Arg("input") input: GetOrCreateChannelInput,
+    @Ctx() { req }: MyContext
+  ): Promise<GetOrCreateChannelResponse> {
+    const { userId } = req.session;
+    const { members, teamId } = input;
+
+    if (!members.length) {
+      return {
+        errors: [
+          {
+            field: "members",
+            message: "You have to select members",
+          },
+        ],
+      };
+    }
+    //checking the user member of the team
+    const member = await Member.findOne({ where: { teamId, userId } });
+    if (!member) {
+      throw new Error("Not Authorized");
+    }
+
+    const filteredMembers = members.filter((uid) => uid !== userId);
+    const allMembers = [...filteredMembers, userId!];
+
+    //check if direct message channel already exists with these members
+    const [response] = await getConnection().query(
+      `
+      select c.id,c.name from channel c
+      left join private_channel_member pcm on pcm."channelId" = c.id 
+     where c.dm = true
+     and c."teamId" = $1 and c.public = false     
+     group by c.id
+     having array_agg(pcm."userId") @> Array[${allMembers.join(",")}]
+     and count(pcm."userId") = $2
+       `,
+      [teamId, allMembers.length]
+    );
+
+    if (response?.id) {
+      return {
+        channel: {
+          id: response?.id,
+        },
+        errors: [
+          {
+            field: "members",
+            message:
+              "This direct message channel already created before with same users",
+          },
+        ],
+      };
+    }
+    try {
+      const res = await getManager().transaction(async () => {
+        const users = await getConnection().query(
+          `
+          select username from public.user where id in (${allMembers})
+          `
+        );
+
+        const name = users.map((u: User) => u.username).join(",");
+        const channel = await Channel.create({
+          creatorId: userId,
+          name,
+          public: false,
+          dm: true,
+          teamId,
+        }).save();
+
+        const newMembers: PCMember[] = [];
+
+        allMembers.forEach((uid) => {
+          const admin = userId === uid;
+          console.log("admin", admin);
+          newMembers.push({ userId: uid, channelId: channel.id, admin });
+        });
+        await getConnection()
+          .createQueryBuilder()
+          .insert()
+          .into(PrivateChannelMember)
+          .values(newMembers)
+          .execute();
+
+        return {
+          channel: {
+            id: channel.id,
+            name: channel.name,
+          },
+        };
+      });
 
       return res;
     } catch (err) {

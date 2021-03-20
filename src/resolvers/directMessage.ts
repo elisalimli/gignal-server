@@ -24,7 +24,7 @@ import { DirectMessageSubscriptionInput } from "../types/Input/DirectMessageSubs
 import { MyContext } from "../types/MyContext";
 import { pubsub } from "../utils/pubsub";
 
-// const pubsub = new PubSub();
+// I don't use direct message,because i have changed it with private channels
 
 @Resolver(DirectMessage)
 export class DirectMessageResolver {
@@ -34,17 +34,6 @@ export class DirectMessageResolver {
     @Arg("input") { teamId, otherUserId }: DirectMessagesInput,
     @Ctx() { req }: MyContext
   ): Promise<Message[] | null> {
-    // return getConnection().query(
-    //   `
-    //     select m.*,
-    //     json_build_object('id',u.id,
-    //     'username',u.username) creator from message
-    //     m join public.user u on u.id = m."creatorId"
-    //     where "channelId" = $1
-    //     order by "createdAt" ASC
-    //     `,
-    //   [channelId]
-    // );
     return getConnection().query(
       `
        select dm.*,json_build_object('id',u.id,'username',u.username) creator from direct_message dm 
@@ -57,77 +46,6 @@ export class DirectMessageResolver {
       [teamId, otherUserId, req.session.userId]
     );
   }
-
-  // @Mutation(() => Boolean)
-  // @UseMiddleware(isAuth)
-  // async createDirectMessage(
-  //   @Arg("input") input: CreateDirectMessageInput,
-  //   @Ctx() { req }: MyContext
-  // ): Promise<Boolean> {
-  //   const { userId } = req.session;
-
-  //   if (input.receiverId === userId) return false;
-  //   const message = await DirectMessage.create({
-  //     ...input,
-  //     senderId: userId,
-  //     createdAt: new Date().toISOString(),
-  //   }).save();
-  //   const asyncFo = async () => {
-  //     // const currentUser = await User.findOne(message.creatorId);
-  //     pubsub.publish(NEW_DIRECT_MESSAGE, {
-  //       newDirectMessageAdded: {
-  //         ...message,
-  //       },
-  //     });
-  //   };
-  //   asyncFo();
-  //   return true;
-  // }
-
-  // @Subscription(() => DirectMessage, {
-  //   subscribe: requiresAuth.createResolver(
-  //     requiresTeamAccess.createResolver(
-  //       withFilter(
-  //         () => pubsub.asyncIterator(NEW_DIRECT_MESSAGE),
-  //         async (
-  //           payload: DirectMessage,
-  //           variables: { teamId: number; userId: number },
-  //           { req }: MyContext
-  //         ) => {
-  //           console.log("sesion", req.session);
-  //           // return (
-  //           //   variables.teamId === payload.teamId &&
-  //           //   (payload.senderId === req.session.userId ||
-  //           //     payload.receiverId === req.session.userId)
-  //           // );
-  //           return 2 === 2;
-  //         }
-  //       )
-  //     )
-  //   ),
-  // })
-  // @Subscription(() => Message, {
-  //   subscribe: requiresAuth.createResolver(
-  //     requiresTeamAccess.createResolver(
-  //       withFilter(
-  //         () => {
-  //           return pubsub.asyncIterator(NEW_DIRECT_MESSAGE);
-  //         },
-  //         async (payload: Message, variables: { channelId: number }) => {
-  //           return true;
-  //         }
-  //       )
-  //     )
-  //   ),
-  // })
-  // newDirectMessageAdded(
-  //   @Root() root: any,
-  //   @Arg("input", () => DirectMessageSubscriptionInput)
-  //   _: DirectMessageSubscriptionInput
-  // ) {
-  //   console.log("seperated root", root);
-  //   return root;
-  // }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
@@ -186,6 +104,4 @@ export class DirectMessageResolver {
   ) {
     return root.newDirectMessageAdded;
   }
-
-
 }
