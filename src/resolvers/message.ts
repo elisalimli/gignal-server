@@ -26,16 +26,21 @@ import { CreateMessageResponse } from "../types/Response/CreateMessageResponse";
 import { pubsub } from "../utils/pubsub";
 import { Channel } from "../entities/Channel";
 import { PrivateChannelMember } from "../entities/PrivateChannelMember";
+import { MessagesInput } from "../types/Input/MessagesInput";
+import { PaginatedMessagesResponse } from "../types/Response/PaginatedMessagesResponse";
 
 @Resolver(Message)
 export class MessageResolver {
-  @Query(() => [Message], { nullable: true })
+  @Query(() => PaginatedMessagesResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async messages(
-    @Arg("channelId", () => Int) channelId: number,
+    @Arg("input") { channelId, cursor, limit }: MessagesInput,
     @Ctx() { req }: MyContext
-  ): Promise<Message[] | null> {
+  ): Promise<PaginatedMessagesResponse> {
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
     const channel = await Channel.findOne(channelId);
+
     if (!channel?.public) {
       const member = await PrivateChannelMember.findOne({
         where: { userId: req.session.userId },
@@ -47,17 +52,29 @@ export class MessageResolver {
       }
     }
 
-    return getConnection().query(
+    const replacments: any[] = [channelId, realLimitPlusOne];
+
+    //asdassdasd
+    if (cursor) replacments.push(cursor);
+    const messages = await getConnection().query(
       `
       select m.*,
       json_build_object('id',u.id,
-      'username',u.username) creator from message
-      m join public.user u on u.id = m."creatorId"
-      where "channelId" = $1 
-      order by "createdAt" ASC
+      'username',u.username) creator from message m
+      join public.user u on u.id = m."creatorId"
+      where "channelId" = $1
+      ${cursor ? `and m."createdAt" < $3` : ""} 
+      order by m."createdAt" DESC
+      limit $2
   `,
-      [channelId]
+      replacments
     );
+    console.log("asasddsa", messages.length, realLimit, realLimitPlusOne);
+    //s
+    return {
+      messages: messages.slice(0, realLimit),
+      hasMore: messages.length === realLimitPlusOne,
+    };
   }
 
   @Mutation(() => CreateMessageResponse)

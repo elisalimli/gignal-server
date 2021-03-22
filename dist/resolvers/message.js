@@ -43,9 +43,13 @@ const CreateMessageResponse_1 = require("../types/Response/CreateMessageResponse
 const pubsub_1 = require("../utils/pubsub");
 const Channel_1 = require("../entities/Channel");
 const PrivateChannelMember_1 = require("../entities/PrivateChannelMember");
+const MessagesInput_1 = require("../types/Input/MessagesInput");
+const PaginatedMessagesResponse_1 = require("../types/Response/PaginatedMessagesResponse");
 let MessageResolver = class MessageResolver {
-    messages(channelId, { req }) {
+    messages({ channelId, cursor, limit }, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
+            const realLimit = Math.min(50, limit);
+            const realLimitPlusOne = realLimit + 1;
             const channel = yield Channel_1.Channel.findOne(channelId);
             if (!(channel === null || channel === void 0 ? void 0 : channel.public)) {
                 const member = yield PrivateChannelMember_1.PrivateChannelMember.findOne({
@@ -55,14 +59,24 @@ let MessageResolver = class MessageResolver {
                     throw new Error("This channel is private,you must part of the channel.");
                 }
             }
-            return typeorm_1.getConnection().query(`
+            const replacments = [channelId, realLimitPlusOne];
+            if (cursor)
+                replacments.push(cursor);
+            const messages = yield typeorm_1.getConnection().query(`
       select m.*,
       json_build_object('id',u.id,
-      'username',u.username) creator from message
-      m join public.user u on u.id = m."creatorId"
-      where "channelId" = $1 
-      order by "createdAt" ASC
-  `, [channelId]);
+      'username',u.username) creator from message m
+      join public.user u on u.id = m."creatorId"
+      where "channelId" = $1
+      ${cursor ? `and m."createdAt" < $3` : ""} 
+      order by m."createdAt" DESC
+      limit $2
+  `, replacments);
+            console.log("asasddsa", messages.length, realLimit, realLimitPlusOne);
+            return {
+                messages: messages.slice(0, realLimit),
+                hasMore: messages.length === realLimitPlusOne,
+            };
         });
     }
     createMessage(input, { req, bucket }) {
@@ -138,12 +152,12 @@ let MessageResolver = class MessageResolver {
     }
 };
 __decorate([
-    type_graphql_1.Query(() => [Message_1.Message], { nullable: true }),
+    type_graphql_1.Query(() => PaginatedMessagesResponse_1.PaginatedMessagesResponse, { nullable: true }),
     type_graphql_1.UseMiddleware(isAuth_1.isAuth),
-    __param(0, type_graphql_1.Arg("channelId", () => type_graphql_1.Int)),
+    __param(0, type_graphql_1.Arg("input")),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [MessagesInput_1.MessagesInput, Object]),
     __metadata("design:returntype", Promise)
 ], MessageResolver.prototype, "messages", null);
 __decorate([
