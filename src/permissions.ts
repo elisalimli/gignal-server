@@ -27,14 +27,13 @@ const createResolver = (resolver: any) => {
 export const requiresAuth = createResolver(
   async (parent: any, args: any, { connection }: MyContext) => {
     const userId = connection.context?.req?.session.userId;
-    console.log("request", connection.context?.req?.session);
     if (!userId) throw new Error("Not authenticated");
   }
 );
 
 export const requiresTeamAccess = createResolver(
   async (parent: any, { channelId }: any, { connection }: MyContext) => {
-    console.log("permission start");
+    console.log("permission starts");
     const userId = connection.context?.req?.session.userId;
 
     const channel = (await Channel.findOne(channelId)) as Channel;
@@ -55,8 +54,9 @@ export const requiresTeamAccess = createResolver(
 
 export const directMessageSubscriptionCheck = createResolver(
   async (parent: any, { input }: any, { connection }: MyContext) => {
+    console.log("permission starts");
+
     const { teamId, receiverId }: DirectMessageSubscriptionInput = input;
-    console.log("permission start");
     const userId = connection.context?.req?.session.userId;
 
     const team = (await Team.findOne(teamId)) as Team;
@@ -73,6 +73,6 @@ export const directMessageSubscriptionCheck = createResolver(
     if (members.length !== 2) {
       throw new Error("Something went wrong");
     }
-    console.log("permission end");
+    console.log("permisssion end");
   }
 );

@@ -26,16 +26,15 @@ const createResolver = (resolver) => {
     return baseResolver;
 };
 exports.requiresAuth = createResolver((parent, args, { connection }) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b;
     const userId = (_b = (_a = connection.context) === null || _a === void 0 ? void 0 : _a.req) === null || _b === void 0 ? void 0 : _b.session.userId;
-    console.log("request", (_d = (_c = connection.context) === null || _c === void 0 ? void 0 : _c.req) === null || _d === void 0 ? void 0 : _d.session);
     if (!userId)
         throw new Error("Not authenticated");
 }));
 exports.requiresTeamAccess = createResolver((parent, { channelId }, { connection }) => __awaiter(void 0, void 0, void 0, function* () {
-    var _e, _f;
-    console.log("permission start");
-    const userId = (_f = (_e = connection.context) === null || _e === void 0 ? void 0 : _e.req) === null || _f === void 0 ? void 0 : _f.session.userId;
+    var _c, _d;
+    console.log("permission starts");
+    const userId = (_d = (_c = connection.context) === null || _c === void 0 ? void 0 : _c.req) === null || _d === void 0 ? void 0 : _d.session.userId;
     const channel = (yield Channel_1.Channel.findOne(channelId));
     if (!channel) {
         throw new Error("Channel cannot be founded");
@@ -49,10 +48,10 @@ exports.requiresTeamAccess = createResolver((parent, { channelId }, { connection
     console.log("permission end");
 }));
 exports.directMessageSubscriptionCheck = createResolver((parent, { input }, { connection }) => __awaiter(void 0, void 0, void 0, function* () {
-    var _g, _h;
+    var _e, _f;
+    console.log("permission starts");
     const { teamId, receiverId } = input;
-    console.log("permission start");
-    const userId = (_h = (_g = connection.context) === null || _g === void 0 ? void 0 : _g.req) === null || _h === void 0 ? void 0 : _h.session.userId;
+    const userId = (_f = (_e = connection.context) === null || _e === void 0 ? void 0 : _e.req) === null || _f === void 0 ? void 0 : _f.session.userId;
     const team = (yield Team_1.Team.findOne(teamId));
     if (!team) {
         throw new Error("Team cannot be founded");
@@ -63,6 +62,6 @@ exports.directMessageSubscriptionCheck = createResolver((parent, { input }, { co
     if (members.length !== 2) {
         throw new Error("Something went wrong");
     }
-    console.log("permission end");
+    console.log("permisssion end");
 }));
 //# sourceMappingURL=permissions.js.map

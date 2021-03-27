@@ -78,7 +78,6 @@ let ChannelResolver = class ChannelResolver {
                         filteredMembers.push(userId);
                         filteredMembers.forEach((uid) => {
                             const admin = req.session.userId === uid;
-                            console.log("admin", admin);
                             newMembers.push({ userId: uid, channelId: channel.id, admin });
                         });
                         yield typeorm_1.getConnection()
@@ -162,7 +161,6 @@ let ChannelResolver = class ChannelResolver {
                     const newMembers = [];
                     allMembers.forEach((uid) => {
                         const admin = userId === uid;
-                        console.log("admin", admin);
                         newMembers.push({ userId: uid, channelId: channel.id, admin });
                     });
                     yield typeorm_1.getConnection()

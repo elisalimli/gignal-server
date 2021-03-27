@@ -41,7 +41,6 @@ const permissions_1 = require("../permissions");
 const CreateMessageInput_1 = require("../types/Input/CreateMessageInput");
 const CreateMessageResponse_1 = require("../types/Response/CreateMessageResponse");
 const pubsub_1 = require("../utils/pubsub");
-const Channel_1 = require("../entities/Channel");
 const PrivateChannelMember_1 = require("../entities/PrivateChannelMember");
 const MessagesInput_1 = require("../types/Input/MessagesInput");
 const PaginatedMessagesResponse_1 = require("../types/Response/PaginatedMessagesResponse");
@@ -50,7 +49,8 @@ let MessageResolver = class MessageResolver {
         return __awaiter(this, void 0, void 0, function* () {
             const realLimit = Math.min(50, limit);
             const realLimitPlusOne = realLimit + 1;
-            const channel = yield Channel_1.Channel.findOne(channelId);
+            console.log("herer");
+            const [channel] = yield typeorm_1.getConnection().query(`select public from channel where id = ${channelId}`);
             if (!(channel === null || channel === void 0 ? void 0 : channel.public)) {
                 const member = yield PrivateChannelMember_1.PrivateChannelMember.findOne({
                     where: { userId: req.session.userId },
@@ -72,7 +72,6 @@ let MessageResolver = class MessageResolver {
       order by m."createdAt" DESC
       limit $2
   `, replacments);
-            console.log("asasddsa", messages.length, realLimit, realLimitPlusOne);
             return {
                 messages: messages.slice(0, realLimit),
                 hasMore: messages.length === realLimitPlusOne,

@@ -39,7 +39,11 @@ export class MessageResolver {
   ): Promise<PaginatedMessagesResponse> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
-    const channel = await Channel.findOne(channelId);
+    console.log("herer");
+    // const channel = await Channel.findOne(channelId);
+    const [channel] = await getConnection().query(
+      `select public from channel where id = ${channelId}`
+    );
 
     if (!channel?.public) {
       const member = await PrivateChannelMember.findOne({
@@ -54,7 +58,6 @@ export class MessageResolver {
 
     const replacments: any[] = [channelId, realLimitPlusOne];
 
-    //asdassdasd
     if (cursor) replacments.push(cursor);
     const messages = await getConnection().query(
       `
@@ -69,8 +72,6 @@ export class MessageResolver {
   `,
       replacments
     );
-    console.log("asasddsa", messages.length, realLimit, realLimitPlusOne);
-    //s
     return {
       messages: messages.slice(0, realLimit),
       hasMore: messages.length === realLimitPlusOne,
@@ -89,7 +90,7 @@ export class MessageResolver {
     const { text, channelId, file } = input;
     if (file) {
       const { createReadStream, mimetype, filename } = await file;
-      const uploadStream = createReadStream();
+      const uploadStream = createReadStream() as any;
       let byteLength = 0;
       for await (const uploadChunk of uploadStream) {
         byteLength += (uploadChunk as Buffer).byteLength;

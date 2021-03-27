@@ -103,7 +103,6 @@ let TeamResolver = class TeamResolver {
                         .returning("*")
                         .execute();
                     const newTeam = result.raw[0];
-                    console.log("team here", newTeam);
                     const { id } = yield Channel_1.Channel.create({
                         creatorId: userId,
                         name: "general",
@@ -149,7 +148,6 @@ let TeamResolver = class TeamResolver {
     }
     getTeamMembers(teamId, { req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("get team members");
             return typeorm_1.getConnection().query(`
       select m.*,json_build_object('id',u.id,'username',u.username) "user" from member m
       join public.user u on u.id = m."userId" where m."teamId" = $1 and m."userId" != $2

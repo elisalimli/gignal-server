@@ -40,13 +40,6 @@ export class TeamResolver {
       `,
       [req.session.userId]
     );
-    // select t.*,json_build_object('password',u.password) creator from team t join "member" m on m."teamId" = t.id join "user" u on u.id = m."userId";
-
-    // select * from team t inner join "user" u on u.id = t."creatorId";
-
-    // SELECT *
-    // FROM weather INNER JOIN cities ON (weather.city = cities.name);
-    // console.log("look teams bud a", teams);
   }
 
   @Mutation(() => Boolean)
@@ -60,21 +53,6 @@ export class TeamResolver {
   async team(
     @Arg("teamId", () => Int) teamId: number
   ): Promise<Team | undefined> {
-    //array_to_json(array_agg(c.*))
-    //      select t.*,json_build_object('id',cr.id,'username',cr.username) creator,json_build_object('id',c.id,'name',c.name,'teamId',c."teamId") channels from team t left join member m on m."teamId" = t.id
-    // join public.user cr on cr.id = t."creatorId" left join public.user u on u.id = m."userId" left join channel c on c."teamId" = $1 where t.id = $1
-    //
-    //      select t.*,
-    //  json_build_object('id',cr.id,'username',cr.username) creator,
-    //  array_agg(json_build_object('id',c.id,'name',c.name,'teamId',c."teamId")) channels,
-    //  array_agg(json_build_object('id',u.id,'username',u.username)) members
-    //  from team t
-    //  left join member m on m."teamId" = t.id
-    //  left join public.user u on u.id = m."userId"
-    //  join public.user cr on cr.id = t."creatorId"
-    //  left join channel c on c."teamId" = 41 where t.id = 41
-    //  group by t.id,cr.id,m.id sad
-
     return Team.findOne(teamId);
   }
 
@@ -144,8 +122,6 @@ export class TeamResolver {
           .execute();
         const newTeam = result.raw[0];
 
-        console.log("team here", newTeam);
-
         const { id } = await Channel.create({
           creatorId: userId,
           name: "general",
@@ -198,7 +174,6 @@ export class TeamResolver {
     @Arg("teamId", () => Int) teamId: number,
     @Ctx() { req }: MyContext
   ): Promise<Member[]> {
-    console.log("get team members");
     return getConnection().query(
       `
       select m.*,json_build_object('id',u.id,'username',u.username) "user" from member m

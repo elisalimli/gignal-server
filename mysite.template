@@ -1,0 +1,3 @@
+ location /graphql {
+        proxy_pass http://web/graphql;
+   }

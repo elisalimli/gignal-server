@@ -27,6 +27,8 @@ export class ChannelResolver {
   @UseMiddleware(isAuth)
   async channel(@Arg("input") input: ChannelInput): Promise<Channel | null> {
     const { channelId: id, teamId } = input;
+
+    //channel
     const channel = await Channel.findOne({ where: { id, teamId } });
 
     if (!channel) return null;
@@ -84,7 +86,6 @@ export class ChannelResolver {
           filteredMembers.push(userId!);
           filteredMembers.forEach((uid) => {
             const admin = req.session.userId === uid;
-            console.log("admin", admin);
             newMembers.push({ userId: uid, channelId: channel.id, admin });
           });
           await getConnection()
@@ -188,7 +189,6 @@ export class ChannelResolver {
 
         allMembers.forEach((uid) => {
           const admin = userId === uid;
-          console.log("admin", admin);
           newMembers.push({ userId: uid, channelId: channel.id, admin });
         });
         await getConnection()

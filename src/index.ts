@@ -18,7 +18,6 @@ import {
   DirectMessage,
   DirectMessageResolver,
   express,
-  isProduction,
   Member,
   MemberResolver,
   Message,
@@ -31,14 +30,16 @@ import {
   UserResolver,
 } from "./indexImports";
 import { MyContext } from "./types/MyContext";
+import { redis } from "./utils/pubsub";
 
-const PORT = process.env.PORT || 4000;
+const PORT = 8080;
 
 const main = async () => {
   const isTestMode = !!process.env.TEST_DB;
   await createConnection({
     type: "postgres",
     database: process.env.TEST_DB || "gignal",
+    host: process.env.DB_HOST || "localhost",
     username: "postgres",
     password: "postgres",
     logging: !isTestMode,
@@ -57,15 +58,20 @@ const main = async () => {
 
   const app = express();
   const RedisStore = connectRedis(session);
-  const redis = new Redis();
+  // const redis = new Redis({
+  //   host: process.env.REDIS_HOST || "127.0.0.1",
+  //   // host: "127.0.0.1",
+  //   port: 6379,
+  // });
 
-  // app.set("trust proxy", 1);
   app.use(
     cors({
       origin: "http://localhost:3000",
       credentials: true,
     })
   );
+
+  app.set("trust proxy", 1);
 
   dotenv.config();
 
@@ -81,20 +87,23 @@ const main = async () => {
   app.use("/graphql", graphqlUploadExpress({ maxFiles: 10 }));
 
   // app.use('/files', express.static('files'))
+  //asdasasdsad
 
   const sessionMiddleware = session({
     name: COOKIE_NAME,
     store: new RedisStore({
       client: redis as any,
       disableTouch: true,
+      ttl: 260,
     }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 366 * 10, //10 years
-      httpOnly: true,
+      httpOnly: false,
       sameSite: "lax", //csrf
-      secure: isProduction, // cookie only works in https
+      secure: false, // cookie only works in https
+      domain: "localhost",
     },
-    secret: "hello world",
+    secret: "adsadipvzxhchvz2afsdaifasdfidj",
     resave: false,
     saveUninitialized: false,
   });
@@ -114,7 +123,6 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema,
-
     context: ({ req, res, connection }: MyContext) => ({
       req,
       res,
@@ -123,9 +131,8 @@ const main = async () => {
       bucket: gignalBucket,
     }),
     uploads: false,
-
+    playground: true,
     subscriptions: {
-      path: "/subscriptions",
       onConnect: async (_, { upgradeReq }: any) =>
         new Promise((res) =>
           sessionMiddleware(upgradeReq, {} as any, () => {
@@ -138,13 +145,15 @@ const main = async () => {
   apolloServer.applyMiddleware({
     app,
     cors: false,
+    path: "/graphql",
   });
   const httpServer = createServer(app);
 
   apolloServer.installSubscriptionHandlers(httpServer);
-  //a
-  httpServer.listen(PORT, () => {
-    console.log(`server listening on port ${PORT}`);
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(
+      `server listening on port ${PORT}/${apolloServer.graphqlPath} redis:${process.env.REDIS_HOST}`
+    );
     console.log(
       `Subscriptions ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`
     );
