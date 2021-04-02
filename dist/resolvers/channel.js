@@ -147,10 +147,14 @@ let ChannelResolver = class ChannelResolver {
           select username from public.user where id in (${allMembers})
           `);
                     let name;
-                    if (filteredMembers.length > 1)
+                    console.log("users", users);
+                    if (filteredMembers.length > 0)
                         name = users.map((u) => u.username).join(",");
-                    else
-                        name = users[0].username;
+                    else if (filteredMembers.length === 0) {
+                        return {
+                            channel: null,
+                        };
+                    }
                     const channel = yield Channel_1.Channel.create({
                         creatorId: userId,
                         name,

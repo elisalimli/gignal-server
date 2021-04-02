@@ -20,13 +20,12 @@ require("reflect-metadata");
 const PrivateChannelMember_1 = require("./entities/PrivateChannelMember");
 const indexImports_1 = require("./indexImports");
 const pubsub_1 = require("./utils/pubsub");
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const isTestMode = !!process.env.TEST_DB;
     yield indexImports_1.createConnection({
         type: "postgres",
         database: process.env.TEST_DB || "gignal",
-        host: process.env.DB_HOST || "localhost",
         username: "postgres",
         password: "postgres",
         logging: !isTestMode,
@@ -43,11 +42,11 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     const app = indexImports_1.express();
     const RedisStore = indexImports_1.connectRedis(indexImports_1.session);
+    app.set("trust proxy", 1);
     app.use(indexImports_1.cors({
         origin: "http://localhost:3000",
         credentials: true,
     }));
-    app.set("trust proxy", 1);
     dotenv_1.default.config();
     const gc = new storage_1.Storage({
         keyFilename: path_1.default.join(__dirname, "../gignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.jsongignal-92ee9-firebase-adminsdk-wlxgo-17f4e5879d.json"),
@@ -55,21 +54,20 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     const gignalBucket = gc.bucket("gignal-92ee9.appspot.com");
     app.use("/graphql", graphql_upload_1.graphqlUploadExpress({ maxFiles: 10 }));
+    const redis = new indexImports_1.Redis(pubsub_1.redisOptions);
     const sessionMiddleware = indexImports_1.session({
         name: indexImports_1.COOKIE_NAME,
         store: new RedisStore({
-            client: pubsub_1.redis,
+            client: redis,
             disableTouch: true,
-            ttl: 260,
         }),
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 366 * 10,
-            httpOnly: false,
+            httpOnly: true,
             sameSite: "lax",
-            secure: false,
-            domain: "localhost",
+            secure: indexImports_1.isProduction,
         },
-        secret: "adsadipvzxhchvz2afsdaifasdfidj",
+        secret: "hello world",
         resave: false,
         saveUninitialized: false,
     });
@@ -90,13 +88,13 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         context: ({ req, res, connection }) => ({
             req,
             res,
-            redis: pubsub_1.redis,
+            redis,
             connection,
             bucket: gignalBucket,
         }),
         uploads: false,
-        playground: true,
         subscriptions: {
+            path: "/subscriptions",
             onConnect: (_, { upgradeReq }) => __awaiter(void 0, void 0, void 0, function* () {
                 return new Promise((res) => sessionMiddleware(upgradeReq, {}, () => {
                     res({ req: upgradeReq });
@@ -107,12 +105,11 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     apolloServer.applyMiddleware({
         app,
         cors: false,
-        path: "/graphql",
     });
     const httpServer = indexImports_1.createServer(app);
     apolloServer.installSubscriptionHandlers(httpServer);
-    httpServer.listen(PORT, "0.0.0.0", () => {
-        console.log(`server listening on port ${PORT}/${apolloServer.graphqlPath} redis:${process.env.REDIS_HOST}`);
+    httpServer.listen(PORT, () => {
+        console.log(`server listening on port ${PORT}`);
         console.log(`Subscriptions ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
     });
 });

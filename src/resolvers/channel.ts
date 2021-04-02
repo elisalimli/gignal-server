@@ -28,7 +28,6 @@ export class ChannelResolver {
   async channel(@Arg("input") input: ChannelInput): Promise<Channel | null> {
     const { channelId: id, teamId } = input;
 
-    //channel
     const channel = await Channel.findOne({ where: { id, teamId } });
 
     if (!channel) return null;
@@ -173,9 +172,15 @@ export class ChannelResolver {
 
         let name;
 
-        if (filteredMembers.length > 1)
+        console.log("users", users);
+
+        if (filteredMembers.length > 0)
           name = users.map((u: User) => u.username).join(",");
-        else name = users[0].username;
+        else if (filteredMembers.length === 0) {
+          return {
+            channel: null,
+          };
+        }
 
         const channel = await Channel.create({
           creatorId: userId,
