@@ -4,31 +4,29 @@ import { graphqlUploadExpress } from "graphql-upload";
 import path from "path";
 import "reflect-metadata";
 import { PrivateChannelMember } from "./entities/PrivateChannelMember";
-import {
-  ApolloServer,
-  buildSchema,
-  Channel,
-  ChannelResolver,
-  connectRedis,
-  COOKIE_NAME,
-  cors,
-  createConnection,
-  createServer,
-  DirectMessage,
-  DirectMessageResolver,
-  express,
-  isProduction,
-  Member,
-  MemberResolver,
-  Message,
-  MessageResolver,
-  Redis,
-  session,
-  Team,
-  TeamResolver,
-  User,
-  UserResolver,
-} from "./indexImports";
+import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+import { PubSub } from "graphql-subscriptions";
+import { createServer } from "http";
+import Redis from "ioredis";
+import { buildSchema } from "type-graphql";
+import { createConnection, getConnection } from "typeorm";
+import { COOKIE_NAME, isProduction } from "./constants";
+import { Channel } from "./entities/Channel";
+import { DirectMessage } from "./entities/DirectMessage";
+import { Member } from "./entities/Member";
+import { Message } from "./entities/Message";
+import { Team } from "./entities/Team";
+import { User } from "./entities/User";
+import { ChannelResolver } from "./resolvers/channel";
+import { DirectMessageResolver } from "./resolvers/directMessage";
+import { MemberResolver } from "./resolvers/member";
+import { MessageResolver } from "./resolvers/message";
+import { TeamResolver } from "./resolvers/team";
+import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types/MyContext";
 import { redisOptions } from "./utils/pubsub";
 
